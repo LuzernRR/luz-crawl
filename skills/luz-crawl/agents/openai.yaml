@@ -1,0 +1,9 @@
+interface:
+  display_name: "Luz Crawl"
+  short_description: "自动选搜索工具并积累可复用调研经验"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/logo.svg"
+  brand_color: "#146EF5"
+  default_prompt: "Use $luz-crawl to first understand my real goal, domain, audience, risks, and search plan, then research across official sources, web, X, Reddit, GitHub, Xiaohongshu, WeChat, videos, papers, standards, patents, and links; save an evidence-backed Markdown dossier under E:\\AgentArea\\Skills输出\\luz-crawl when useful."
+policy:
+  allow_implicit_invocation: true

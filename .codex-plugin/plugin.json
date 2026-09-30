@@ -1,0 +1,25 @@
+{
+  "name": "luz-crawl",
+  "version": "0.1.0",
+  "description": "Evidence-backed multi-source search, research, crawling, verification, and reusable research memory.",
+  "author": {
+    "name": "LuzernRR"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Luz Crawl",
+    "shortDescription": "Plan, crawl, verify, and preserve research evidence.",
+    "longDescription": "Luz Crawl automatically inventories available search routes, retrieves relevant persistent experience, executes evidence-backed multi-source research, records fallbacks, and deposits idempotent lessons for future runs.",
+    "developerName": "LuzernRR",
+    "category": "Productivity",
+    "capabilities": [
+      "Research",
+      "Write"
+    ],
+    "defaultPrompt": "Research this topic with Luz Crawl and produce an evidence-backed source map.",
+    "brandColor": "#146EF5",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/logo.svg",
+    "logoDark": "./assets/logo-dark.svg"
+  }
+}
