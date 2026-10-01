@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Luz Crawl — Search & Capture",
+  "version": "0.3.2",
+  "minimum_chrome_version": "120",
+  "description": "Connect Luz Crawl to a local backend for planned search and automatic visible-result capture.",
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8765/*"
+  ],
+  "optional_host_permissions": [
+    "https://github.com/*",
+    "https://www.xiaohongshu.com/*",
+    "https://x.com/*",
+    "https://www.zhihu.com/*",
+    "https://weixin.sogou.com/*",
+    "https://www.1688.com/*",
+    "https://s.1688.com/*",
+    "https://www.qcc.com/*",
+    "https://www.gsxt.gov.cn/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Luz Crawl",
+    "default_popup": "popup.html"
+  }
+}

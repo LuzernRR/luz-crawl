@@ -12,6 +12,8 @@ Write durable lessons to:
 
 Create entries through `finalize_run.py`. The append-only event ledger is authoritative; this Markdown file is a rebuilt projection for retrieval and inspection.
 
+Before searching, run `experience_store.py query "<intent domain platforms>"`. Its `keyword_hints` object automatically surfaces applicable worked queries, weak queries, and next-query seeds. Also search `content_index.py` for old source URLs and terms. Use those as seeds and always refresh sources before relying on them.
+
 ## What To Record
 
 - Platform and backend used.
@@ -57,7 +59,13 @@ When a result is useful, inspect it for new search material:
 - hidden buyer language such as `manual process`, `missed revenue`, `refund`, `churn`, `chargeback`, `denial`, `dispatch`, `intake`, `quote`, `inspection`, `spreadsheet`, `before you buy`, `real results`, `what nobody tells you`, `postmortem`, `not worth it`;
 - adjacent domains where the same job-to-be-done may exist.
 
-For serious research, run at least one follow-up query from this extracted material before writing the final synthesis. Record the chain in the memory file so future searches can start from the new vocabulary instead of returning to generic labels.
+## Sufficiency-Guided Follow-Up Search
+
+At the start, define the evidence coverage or count needed to answer the user's decision and include follow-up criteria in the search plan. When the user gives no numeric target, a round is sufficient only when it yields enough distinct, relevant, source-verified evidence for the requested answer; `completed`, a large link count, or page navigation links do not establish sufficiency.
+
+After each batch, automatically assess relevant unique results, coverage across requested source types, freshness, and whether source details were opened and verified. If evidence is still thin, extract useful vocabulary from relevant titles, snippets, and any body text actually read. Generate focused alternatives such as a narrower entity/product term, synonym, adjacent phrase, proper name, or platform-native wording. Treat search snippets as leads, not verified claims; ignore navigation labels, recommendations, and unrelated trending content.
+
+Before every follow-up search, show the user the exact tool, target website/domain, query, derivation from the preceding results, execution steps, and fallback. Then execute the planned query serially. Preserve each query, its source/derivation, result counts, and the reason for continuing or stopping in the run evidence and finalization. Continue without waiting for the user to remind you, but stop once coverage is sufficient, no new relevant terms emerge, access is blocked/rate-limited, or three follow-up rounds have run; report unresolved gaps rather than broadening indefinitely.
 
 ## Comfort-Zone Breaker
 

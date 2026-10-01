@@ -12,6 +12,9 @@ from pathlib import Path
 import re
 import time
 from typing import Iterator
+from urllib.parse import urlparse
+
+from source_registry import safe_source_url
 
 from luz_crawl_protocol import (
     BUNDLED_EXPERIENCE_ROOT,
@@ -29,6 +32,7 @@ PROJECTION_FILES = (
     "search-keywords.md",
     "search-skill-library.md",
 )
+PREFERENCE_PROFILE_FILE = "user-preferences.json"
 DEFAULT_TITLES = {
     "knowledge-index.md": "# Luz Crawl Knowledge Index\n",
     "search-keywords.md": "# Luz Crawl Search Keywords\n",
@@ -112,6 +116,23 @@ def initialize_store(
             "bundled_experience_is_seed_only": True,
         }
         atomic_write_text(metadata_path, json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
+    profile_path = state_root / PREFERENCE_PROFILE_FILE
+    if not profile_path.exists():
+        legacy_events: list[dict] = []
+        try:
+            for line in events_path.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    parsed = json.loads(line)
+                    if isinstance(parsed, dict):
+                        legacy_events.append(parsed)
+            profile = preference_profile(legacy_events)
+        except (OSError, json.JSONDecodeError, ValueError):
+            profile = {
+                "schema_version": 1,
+                "active_preferences": [],
+                "pending_inferred_preferences": [],
+            }
+        atomic_write_text(profile_path, json.dumps(profile, ensure_ascii=False, indent=2) + "\n")
     return state_root
 
 
@@ -180,6 +201,125 @@ def _values(event: dict, key: str) -> list[str]:
     return [str(value)] if str(value).strip() else []
 
 
+def normalize_preference_observation(value: object) -> dict:
+    """Validate a small, non-sensitive search/output preference observation."""
+    if not isinstance(value, dict):
+        raise ValueError("preference observation must be a JSON object")
+    key = str(value.get("key", "")).strip().lower().replace(" ", "_")
+    preference = str(value.get("value", "")).strip()
+    source = str(value.get("source", "inferred")).strip().lower()
+    if not key or not re.fullmatch(r"[a-z0-9_.-]{2,64}", key):
+        raise ValueError("preference key must be 2-64 lowercase letters, digits, '.', '_' or '-'")
+    if not preference or len(preference) > 240:
+        raise ValueError("preference value must contain 1-240 characters")
+    if source not in {"explicit", "inferred"}:
+        raise ValueError("preference source must be 'explicit' or 'inferred'")
+    try:
+        confidence = float(value.get("confidence", 1.0 if source == "explicit" else 0.6))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("preference confidence must be a number from 0 to 1") from exc
+    if not 0 <= confidence <= 1:
+        raise ValueError("preference confidence must be a number from 0 to 1")
+    evidence = str(value.get("evidence", "")).strip()
+    if len(evidence) > 280:
+        raise ValueError("preference evidence must be at most 280 characters")
+    return {
+        "key": key,
+        "value": preference,
+        "source": source,
+        "confidence": confidence,
+        "evidence": evidence,
+    }
+
+
+def normalize_result_feedback(value: object) -> dict:
+    """Store a compact user feedback signal, never a copied source body."""
+    if not isinstance(value, dict):
+        raise ValueError("result feedback must be a JSON object")
+    action = str(value.get("action", "")).strip().lower()
+    allowed_actions = {"preferred", "rejected", "opened", "saved", "corrected"}
+    if action not in allowed_actions:
+        raise ValueError(f"feedback action must be one of {', '.join(sorted(allowed_actions))}")
+    item = str(value.get("item", "")).strip()
+    reason = str(value.get("reason", "")).strip()
+    platform = str(value.get("platform", "")).strip().lower()
+    safe_url = safe_source_url(item)
+    if not safe_url:
+        raise ValueError("feedback item must be a source HTTP(S) URL; do not pass copied source text")
+    if len(item) > 2048 or len(reason) > 240 or len(platform) > 48:
+        raise ValueError("feedback item/platform/reason exceeds the supported length")
+    return {"action": action, "item": safe_url,
+            "platform": platform, "reason": reason}
+
+
+def preference_profile(events: list[dict]) -> dict:
+    """Build explicit and repeat-confirmed inferred preferences from the ledger."""
+    explicit: dict[str, tuple[int, dict, str]] = {}
+    inferred: dict[str, dict[str, dict[str, tuple[dict, str]]]] = {}
+    for position, event in enumerate(events):
+        event_id = str(event.get("event_id", f"event-{position}"))
+        recorded_at = str(event.get("recorded_at", ""))
+        for raw in event.get("preference_observations", []) or []:
+            observation = normalize_preference_observation(raw)
+            key = observation["key"]
+            if observation["source"] == "explicit":
+                prior = explicit.get(key)
+                if prior is None or (recorded_at, position) >= (prior[2], prior[0]):
+                    explicit[key] = (position, observation, recorded_at)
+            else:
+                inferred.setdefault(key, {}).setdefault(observation["value"], {})[event_id] = (
+                    observation, recorded_at
+                )
+
+    active: list[dict] = []
+    pending: list[dict] = []
+    all_keys = set(explicit) | set(inferred)
+    for key in sorted(all_keys):
+        if key in explicit:
+            _, observation, recorded_at = explicit[key]
+            active.append({
+                **observation,
+                "status": "active",
+                "observation_count": 1,
+                "last_seen": recorded_at,
+                "basis": "latest_explicit_instruction",
+            })
+            continue
+
+        candidates = []
+        for value, run_observations in inferred[key].items():
+            items = list(run_observations.values())
+            avg_confidence = sum(item[0]["confidence"] for item in items) / len(items)
+            candidates.append({
+                "key": key,
+                "value": value,
+                "source": "inferred",
+                "confidence": round(avg_confidence, 3),
+                "observation_count": len(items),
+                "last_seen": max((item[1] for item in items), default=""),
+                "evidence": next((item[0]["evidence"] for item in reversed(items)
+                                  if item[0]["evidence"]), ""),
+            })
+        candidates.sort(key=lambda item: (-item["observation_count"],
+                                          -item["confidence"], item["value"]))
+        winner = candidates[0]
+        runner_up_count = candidates[1]["observation_count"] if len(candidates) > 1 else 0
+        if winner["observation_count"] >= 2 and winner["confidence"] >= 0.6 \
+                and winner["observation_count"] > runner_up_count:
+            active.append({
+                **winner,
+                "status": "active",
+                "basis": "repeated_independent_runs",
+            })
+        else:
+            pending.extend({**item, "status": "pending_confirmation"} for item in candidates)
+    return {
+        "schema_version": 1,
+        "active_preferences": active,
+        "pending_inferred_preferences": pending,
+    }
+
+
 def _joined(event: dict, key: str, empty: str = "not recorded") -> str:
     values = _values(event, key)
     return "; ".join(values) if values else empty
@@ -202,6 +342,18 @@ def _render_knowledge_event(event: dict) -> str:
         lines.append(f"- 下次检索：{_joined(event, 'next_queries')}")
     if _values(event, "sources"):
         lines.append(f"- 关键来源：{_joined(event, 'sources')}")
+    observations = event.get("preference_observations", []) or []
+    if observations:
+        rendered = [f"{item.get('key')}={item.get('value')} ({item.get('source')})"
+                    for item in observations if isinstance(item, dict)]
+        if rendered:
+            lines.append(f"- 搜索偏好信号：{'；'.join(rendered)}")
+    feedback = event.get("result_feedback", []) or []
+    if feedback:
+        rendered = [f"{item.get('action')}:{item.get('platform') or urlparse(item.get('item', '')).netloc}"
+                    for item in feedback if isinstance(item, dict)]
+        if rendered:
+            lines.append(f"- 结果反馈：{'；'.join(rendered)}")
     return "\n".join(lines) + "\n"
 
 
@@ -263,11 +415,23 @@ def rebuild_projections(root: Path | str | None = None, events: list[dict] | Non
     event_list = load_events(state_root) if events is None else events
     for name in PROJECTION_FILES:
         atomic_write_text(state_root / name, projection_content(state_root, name, event_list))
+    atomic_write_text(
+        state_root / PREFERENCE_PROFILE_FILE,
+        json.dumps(preference_profile(event_list), ensure_ascii=False, indent=2) + "\n",
+    )
 
 
 def record_event(event: dict, root: Path | str | None = None) -> bool:
     state_root = initialize_store(root)
     normalized = dict(event)
+    normalized["preference_observations"] = [
+        normalize_preference_observation(item)
+        for item in normalized.get("preference_observations", []) or []
+    ]
+    normalized["result_feedback"] = [
+        normalize_result_feedback(item)
+        for item in normalized.get("result_feedback", []) or []
+    ]
     normalized.setdefault("recorded_at", utc_now())
     if not normalized.get("event_id"):
         raise ValueError("event_id is required")
@@ -298,12 +462,54 @@ def record_event(event: dict, root: Path | str | None = None) -> bool:
     return recorded
 
 
-def query_store(query: str, root: Path | str | None = None, limit: int = 8) -> list[dict]:
+def _query_tokens(query: str) -> list[str]:
+    normalized = query.strip().lower()
+    raw = re.findall(r"[a-z0-9][a-z0-9._/-]*|[\u4e00-\u9fff]+", normalized)
+    tokens: list[str] = []
+    for item in raw:
+        if re.fullmatch(r"[\u4e00-\u9fff]+", item):
+            if len(item) > 1:
+                tokens.extend(item[index:index + 2] for index in range(len(item) - 1))
+            tokens.append(item)
+        elif len(item) > 1:
+            tokens.append(item)
+    return list(dict.fromkeys(tokens))
+
+
+def query_hints(query: str, events: list[dict], limit: int = 5) -> dict:
+    tokens = set(_query_tokens(query))
+    if not tokens:
+        return {"worked_queries": [], "weak_queries": [], "next_queries": []}
+    ranked: list[tuple[int, int, dict]] = []
+    for position, event in enumerate(events):
+        haystack = " ".join([
+            str(event.get("label", "")), str(event.get("summary", "")),
+            str(event.get("domain", "")), *_values(event, "channels"),
+            *_values(event, "tools"), *_values(event, "lessons"),
+            *_values(event, "worked_queries"), *_values(event, "weak_queries"),
+            *_values(event, "next_queries"),
+        ])
+        score = len(tokens.intersection(_query_tokens(haystack)))
+        if score:
+            ranked.append((score, position, event))
+    ranked.sort(key=lambda item: (-item[0], -item[1]))
+    selected = [item[2] for item in ranked[:max(1, limit)]]
+    def collect(field: str) -> list[str]:
+        values: list[str] = []
+        for event in selected:
+            values.extend(_values(event, field))
+        return list(dict.fromkeys(values))[:12]
+    return {
+        "worked_queries": collect("worked_queries"),
+        "weak_queries": collect("weak_queries"),
+        "next_queries": collect("next_queries"),
+        "matched_runs": [str(event.get("label", "research run")) for event in selected],
+    }
+
+
+def query_store(query: str, root: Path | str | None = None, limit: int = 8) -> dict:
     state_root = initialize_store(root)
-    normalized_query = query.strip().lower()
-    tokens = [normalized_query] if normalized_query else []
-    tokens.extend(token for token in re.findall(r"[\w\-]+", normalized_query) if len(token) > 1)
-    tokens = list(dict.fromkeys(tokens))
+    tokens = _query_tokens(query)
     matches: list[dict] = []
     for name in PROJECTION_FILES:
         text = (state_root / name).read_text(encoding="utf-8")
@@ -319,7 +525,12 @@ def query_store(query: str, root: Path | str | None = None, limit: int = 8) -> l
                 {"file": name, "heading": heading, "score": score, "excerpt": excerpt[:600]}
             )
     matches.sort(key=lambda item: (-item["score"], item["file"], item["heading"]))
-    return matches[: max(1, limit)]
+    events = load_events(state_root)
+    return {
+        "matches": matches[: max(1, limit)],
+        "preferences": preference_profile(events)["active_preferences"],
+        "keyword_hints": query_hints(query, events),
+    }
 
 
 def doctor(root: Path | str | None = None) -> dict:
@@ -335,6 +546,17 @@ def doctor(root: Path | str | None = None) -> dict:
     for name in EXPERIENCE_FILES:
         if not (state_root / name).is_file():
             errors.append(f"missing experience file: {name}")
+    profile_path = state_root / PREFERENCE_PROFILE_FILE
+    if not profile_path.is_file():
+        errors.append(f"missing experience file: {PREFERENCE_PROFILE_FILE}")
+    else:
+        try:
+            actual_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            expected_profile = preference_profile(events)
+            if actual_profile != expected_profile:
+                errors.append(f"projection drift: {PREFERENCE_PROFILE_FILE}; run experience_store.py rebuild")
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            errors.append(f"invalid preference profile: {exc}")
     metadata_path = state_root / STATE_FILE
     try:
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
@@ -386,7 +608,7 @@ def main() -> int:
         print(json.dumps({"root": str(root), "rebuilt": True}, ensure_ascii=False, indent=2))
         return 0
     results = query_store(args.query, root, args.limit)
-    print(json.dumps({"root": str(root), "query": args.query, "matches": results}, ensure_ascii=False, indent=2))
+    print(json.dumps({"root": str(root), "query": args.query, **results}, ensure_ascii=False, indent=2))
     return 0
 
 

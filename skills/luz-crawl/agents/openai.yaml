@@ -4,6 +4,6 @@ interface:
   icon_small: "./assets/icon.svg"
   icon_large: "./assets/logo.svg"
   brand_color: "#146EF5"
-  default_prompt: "Use $luz-crawl to first understand my real goal, domain, audience, risks, and search plan, then research across official sources, web, X, Reddit, GitHub, Xiaohongshu, WeChat, videos, papers, standards, patents, and links; save an evidence-backed Markdown dossier under E:\\AgentArea\\Skills输出\\luz-crawl when useful."
+  default_prompt: "Use $luz-crawl to first understand my real goal, domain, audience, risks, and search plan, then research across official sources, web, X, Reddit, GitHub, Xiaohongshu, WeChat, videos, papers, standards, patents, and links; save an evidence-backed Markdown dossier in the user's configured Luz Crawl output directory when useful."
 policy:
   allow_implicit_invocation: true

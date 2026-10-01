@@ -2,6 +2,8 @@
 
 Use this workflow for Xiaohongshu, Zhihu, and WeChat public-account article searches when the user has asked to use the existing Edge session.
 
+This Edge-specific workflow does not apply when the user explicitly selects Codex's in-app browser. In that case, follow `codex-in-app-browser-workflow.md` and do not route through OpenCLI's Edge Bridge.
+
 ## Browser selection and connection
 
 1. On Windows, the default system-wide Edge launcher is `C:\Users\Public\Desktop\Microsoft Edge.lnk`.

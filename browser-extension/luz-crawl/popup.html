@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Luz Crawl</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <div class="brand-mark" aria-hidden="true">L</div>
+        <div>
+          <h1>Luz Crawl</h1>
+          <p>复用搜索标签 · 自动采集可见结果</p>
+        </div>
+      </header>
+
+      <p id="bridge-status" class="bridge-status" role="status" aria-live="polite">正在连接本机后端…</p>
+
+      <section class="permission-panel" aria-label="站点权限">
+        <div class="permission-heading">
+          <h2>站点授权</h2>
+          <span id="permission-summary" role="status" aria-live="polite">检查授权状态…</span>
+        </div>
+        <button id="authorize-all" class="permission-button" type="button">一键授权所有已登记来源</button>
+        <p id="permission-detail" class="muted">只申请扩展已登记来源的页面读取权限；浏览器会在点击后显示授权提示。</p>
+      </section>
+
+      <form id="search-form">
+        <label for="source">搜索来源</label>
+        <select id="source" name="source"></select>
+
+        <label for="query">关键词</label>
+        <input id="query" name="query" type="text" maxlength="200" autocomplete="off" placeholder="例如：深圳家具工厂" required>
+
+        <section class="plan" aria-live="polite">
+          <h2>执行前计划</h2>
+          <p id="plan-source"></p>
+          <p id="plan-query"></p>
+          <ol id="plan-steps"></ol>
+          <p id="plan-fallback" class="muted"></p>
+        </section>
+
+        <button class="primary" type="submit">开始搜索并自动采集</button>
+      </form>
+
+      <button id="capture" class="secondary" type="button">手动采集当前页</button>
+      <p class="privacy">首次使用某个平台时会单独请求该站点权限。扩展只保存当前页可见链接到本地；手机号和邮箱会省略，遇到登录或安全验证会暂停。</p>
+      <p id="status" role="status" aria-live="polite"></p>
+      <p id="run-summary" class="run-summary" aria-live="polite"></p>
+
+      <section class="recent">
+        <div class="recent-heading">
+          <h2>最近采集</h2>
+          <button id="clear" type="button" class="text-button">清除本地记录</button>
+        </div>
+        <div id="captures" class="capture-list"></div>
+      </section>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

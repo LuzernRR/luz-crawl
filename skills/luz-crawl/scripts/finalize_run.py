@@ -8,7 +8,9 @@ from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
+import sqlite3
 
+from content_index import index_manifest, record_feedback
 from experience_store import record_event
 from luz_crawl_protocol import resolve_experience_root
 
@@ -36,6 +38,14 @@ def main() -> int:
     parser.add_argument("--tool-problem", action="append", default=[])
     parser.add_argument("--tool-fix", action="append", default=[])
     parser.add_argument("--image-note", action="append", default=[])
+    parser.add_argument(
+        "--preference", action="append", default=[],
+        help="JSON preference observation, e.g. {\"key\":\"report_style\",\"value\":\"concise\",\"source\":\"explicit\"}",
+    )
+    parser.add_argument(
+        "--feedback", action="append", default=[],
+        help="JSON result feedback, e.g. {\"action\":\"rejected\",\"item\":\"URL\",\"reason\":\"weak source\"}",
+    )
     args = parser.parse_args()
 
     folder: Path | None = None
@@ -53,6 +63,13 @@ def main() -> int:
         return 1
 
     label = args.run_label or (folder.name if folder else "research run")
+    try:
+        preferences = [json.loads(value) for value in args.preference]
+        feedback = [json.loads(value) for value in args.feedback]
+    except json.JSONDecodeError as exc:
+        print(f"ERROR: invalid --preference/--feedback JSON: {exc}")
+        return 1
+
     event = {
         "label": label,
         "dossier": str(folder) if folder else "",
@@ -69,6 +86,8 @@ def main() -> int:
         "tool_problems": args.tool_problem,
         "tool_fixes": args.tool_fix,
         "image_notes": args.image_note,
+        "preference_observations": preferences,
+        "result_feedback": feedback,
     }
     identity = {"date": datetime.now().strftime("%Y-%m-%d"), **event}
     event_id = args.run_id or stable_event_id(identity)
@@ -83,6 +102,23 @@ def main() -> int:
     print(f"recorded={'true' if recorded else 'false'}")
     print(f"experience_root={experience_root}")
     print(f"events={experience_root / 'events.jsonl'}")
+    if folder:
+        manifest = next((path for path in (folder / "manifest.json", folder / "raw" / "manifest.json")
+                         if path.is_file()), None)
+        if manifest:
+            try:
+                indexed = index_manifest(manifest, experience_root / "content-index.sqlite")
+                print(f"content_indexed={indexed}")
+                print(f"content_index={experience_root / 'content-index.sqlite'}")
+            except (OSError, ValueError, json.JSONDecodeError, RuntimeError, sqlite3.Error) as exc:
+                print(f"content_index_warning={type(exc).__name__}: {exc}")
+    if feedback:
+        try:
+            count = record_feedback(
+                feedback, experience_root / "content-index.sqlite", event_id=event_id)
+            print(f"feedback_indexed={count}")
+        except (OSError, sqlite3.Error) as exc:
+            print(f"feedback_index_warning={type(exc).__name__}: {exc}")
     return 0
 
 

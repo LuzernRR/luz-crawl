@@ -15,6 +15,32 @@ Pass only tools actually present in the current runtime. Use prior experience as
 
 For domain-specific work such as software development, UI/UX, databases, engineering, materials, manufacturing, industrial technology, business, policy, or science, also read `domain-playbooks.md`.
 
+## Platform Scope Before Route Selection
+
+Start from the platforms the user named and the information they need. Do not fan out across every registered source. A search plan must identify the target platform/site for each query and explain any supporting source.
+
+When a platform is specified, search its native site, official portal, or official search surface directly whenever available. Use Bing, Google, or another available general search engine to discover the correct official entry point, locate current documentation, or fill a specific evidence gap. Do not restrict discovery to the extension's source registry or to GitHub. GitHub is the right route for open-source repositories and implementation examples; it is not a replacement for searching a specified social, commerce, analytics, or enterprise-information platform.
+
+If a direct platform route is unavailable, say which route is missing and use a clearly labeled search-engine/official-source fallback when available. Preserve user-selected browser and login constraints. Before any platform or web search, show the tools, exact sites/domains, query variants, sequence, and fallback; keep searches scoped to the requested platforms unless evidence gives a concrete reason to expand.
+
+## Intent-to-Source Starting Map (Flexible)
+
+Route by the information the user needs and the decision they are making, not by a fixed platform checklist. The mappings below are starting points, not an allowlist, a mandatory sequence, or a one-source limit:
+
+| Information need | Good starting sources | Add another source when |
+| --- | --- | --- |
+| Open-source code, libraries, examples, maintenance | GitHub repositories, issues, releases, and official project docs | The task needs package health, usage, benchmarks, or alternatives; add the relevant package registry, docs, or community evidence. |
+| Company identity, registration, shareholders, risk, or business profile | Qichacha/Tianyancha when available and authorized; national/provincial official company registries for verification | A field needs legal/source-of-truth confirmation or the commercial database is gated; add the relevant official registry or company source and label gaps. |
+| General or latest web information | Google/Bing or another available web search for discovery, then the original official, primary, or reputable source | The topic has a dedicated community, database, news source, or specialist publication that can answer a distinct evidence question. |
+| Posts, discussions, creator content, or platform-specific public opinion | The named platform's native search/site first | Coverage is incomplete or a cross-platform comparison is requested; add only the other named or clearly relevant platforms. |
+| Marketplace products, suppliers, and factory capabilities | The named marketplace (for example 1688) for listings and seller pages | Current specifications, stock, terms, or seller identity need corroboration; add the seller's official site, another marketplace, or an authorized verification source. |
+| Creator, livestream, campaign, product-performance, or hot-item signals | The platform's official creator/commerce tools and APIs, plus matching specialist analytics services (for example Pugongying for Xiaohongshu, Douyin/Juliang Buyin for Douyin, or Qiangua/Huitun when their coverage fits) | A metric is gated, estimated, sampled, or stale; compare with an independent or platform-native source and state its scope, access date, and definition. |
+| Rules, standards, legal status, or regulated claims | The responsible government, standards body, regulator, or official policy source | Interpretation or implementation experience matters; add credentialed analysis or practitioner discussion as secondary evidence. |
+
+For a specified direction, identify multiple matching sources only when each adds distinct coverage (such as platform-native results plus an official API/doc source plus a specialist data provider). State the reason each source is included before searching. Do not fan out across the whole registry, and do not force an example provider into a plan when it does not cover the requested data. If a provider name is ambiguous (for example “千帆” versus “千瓜”), mark the ambiguity and verify the intended service before treating it as a route.
+
+Use a search engine to discover the right platform or official entry point when needed, not to replace direct search on a user-named platform. Search the platform directly first when an available native route can answer the question; use engine-indexed pages as a labeled fallback or complementary discovery lane. Separate platform claims, observed records, estimates, and verified facts in the evidence.
+
 ## Default Search Lanes
 
 For any non-trivial topic, cover the useful lanes below:

@@ -151,7 +151,7 @@ def main() -> int:
         check(len(load_events(state_root)) == 1, "experience event ledger should contain one event", errors)
         query_matches = query_store("selfcheckuniquetoken", state_root)
         check(
-            any("self-check-event" in item["excerpt"] for item in query_matches),
+            any("self-check-event" in item["excerpt"] for item in query_matches["matches"]),
             "experience query should return the recorded event",
             errors,
         )
