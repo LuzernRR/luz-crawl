@@ -41,7 +41,7 @@ async function allocationLock(base, action) {
 export async function allocateRun(out, url, resume = false) {
   const output = path.resolve(out);
   const base = path.join(output, 'raw');
-  const identity = canonicalURL(url);
+  const identity = url === undefined ? null : canonicalURL(url);
   return allocationLock(base, async () => {
     let folder, previous = null, serial = 0, highest = 0;
     for (const directory of [base, output]) for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
@@ -54,7 +54,7 @@ export async function allocateRun(out, url, resume = false) {
         try { record = JSON.parse(await fs.readFile(path.join(candidate, 'raw', name), 'utf8')); break; }
         catch (error) { if (error.code !== 'ENOENT') throw error; }
       }
-      if (record?.canonical_url && canonicalURL(record.canonical_url) === identity) {
+      if (identity && record?.canonical_url && canonicalURL(record.canonical_url) === identity) {
         if (folder) throw new Error('Duplicate URL archives found; resolve duplicates before resuming.');
         folder = candidate; previous = record.files ? record : null;
         serial = Number(entry.name.match(/^(\d+)_/)?.[1] || 0);

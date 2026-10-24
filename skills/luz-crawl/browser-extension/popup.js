@@ -1,5 +1,27 @@
 // Modified by LuzernRR for LuzCrawl: branding, visible labels and help entry.
 // Based on OpenCLI Browser Bridge 1.0.24; Apache-2.0. See LICENSE and NOTICE.
+import { getOutputPreferences, setOutputPreferences } from './preferences.js';
+
+const directoryInput = document.getElementById('outputDir');
+const settingsStatus = document.getElementById('settingsStatus');
+getOutputPreferences().then((saved) => { directoryInput.value = saved.output_dir || ''; }).catch((error) => {
+  settingsStatus.textContent = error.message;
+  settingsStatus.classList.add('error');
+});
+document.getElementById('directoryForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = document.getElementById('saveDirectory');
+  button.disabled = true;
+  try {
+    const saved = await setOutputPreferences({ output_dir: directoryInput.value });
+    directoryInput.value = saved.output_dir;
+    settingsStatus.textContent = '已保存，下一次采集生效；临时 --out 优先。';
+    settingsStatus.classList.remove('error');
+  } catch (error) {
+    settingsStatus.textContent = error.message;
+    settingsStatus.classList.add('error');
+  } finally { button.disabled = false; }
+});
 // Query connection status from background service worker
 chrome.runtime.sendMessage({ type: 'getStatus' }, (resp) => {
   const card = document.getElementById('card');
@@ -73,7 +95,7 @@ function copyToClipboard(text, btn) {
     },
     () => {
       btn.textContent = '复制失败';
-      setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+      setTimeout(() => { btn.textContent = '复制'; }, 1200);
     },
   );
 }

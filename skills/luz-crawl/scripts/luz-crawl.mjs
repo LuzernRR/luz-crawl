@@ -10,6 +10,8 @@ import { extractURLs, validateURL } from '../opencli/lib/platforms.mjs';
 import { preferences, rememberPreferences, rememberSite, sites, pendingTasks, loadTask } from '../opencli/lib/memory.mjs';
 import { downloadArchive } from '../opencli/lib/download.mjs';
 import { validateActions } from '../opencli/lib/browser-actions.mjs';
+import { syncBrowserPreferences } from '../opencli/lib/browser-preferences.mjs';
+import { collect, refreshCollection } from '../opencli/lib/collect.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const print = (value) => console.log(JSON.stringify(value, null, 2));
@@ -37,9 +39,11 @@ function captureArgs(url, options) {
   return args;
 }
 
-const usage = `LuzCrawl 2.3 — skill, browser extension and local memory
+const usage = `LuzCrawl 2.4 — skill, browser extension and local memory
   node scripts/luz-crawl.mjs doctor
   node scripts/luz-crawl.mjs install
+  node scripts/luz-crawl.mjs collect "topic or URL" [--platform xhs,github,bing] [--read 1] [--out DIRECTORY]
+  node scripts/luz-crawl.mjs report COLLECTION_DIRECTORY
   node scripts/luz-crawl.mjs capture URL --out DIRECTORY [--scrolls 20] [--comments] [--resume]
   node scripts/luz-crawl.mjs batch --file links.md --out DIRECTORY [--resume]
   node scripts/luz-crawl.mjs search x "query" --out DIRECTORY [--read 5]
@@ -72,7 +76,10 @@ async function main() {
   if (command === 'experience') { print(await findExperience(values.query || '', values.platform)); return; }
   if (command === 'sites') { print((await sites()).filter((item) => !values.category || item.category === values.category)); return; }
   if (command === 'pending') { print(await pendingTasks()); return; }
-  if (command === 'remember') { print(values.site ? await rememberSite(values) : await rememberPreferences(values)); return; }
+  if (command === 'remember') {
+    const saved = values.site ? await rememberSite(values) : await rememberPreferences(values);
+    print(values.out && !values.site ? await syncBrowserPreferences(values.profile) : saved); return;
+  }
   if (command === 'continue' || command === 'cancel') {
     if (!args[0]) throw new Error('A pending task ID is required.');
     await loadTask(args[0]);
@@ -82,8 +89,10 @@ async function main() {
   }
   if (command === 'verify') { if (!args[0]) throw new Error('Archive directory is required.'); const result = await verifyArchive(args[0]); print(result); process.exitCode = result.ok ? 0 : 2; return; }
   if (command === 'download') { if (!args[0]) throw new Error('Archive directory is required.'); const result = await downloadArchive(args[0]); print(result); process.exitCode = result.status === 'partial' ? 2 : 0; return; }
-  if (!['capture', 'batch', 'search', 'browser'].includes(command)) throw new Error(`Unknown command: ${command}`);
-  values.out ||= defaults.output_dir;
+  if (command === 'report') { if (!args[0]) throw new Error('Collection directory is required.'); print(await refreshCollection(args[0])); return; }
+  if (!['capture', 'batch', 'search', 'browser', 'collect'].includes(command)) throw new Error(`Unknown command: ${command}`);
+  const current = await syncBrowserPreferences(values.profile);
+  values.out ||= current.output_dir;
   values.window ||= defaults.window;
   if (command === 'browser') { validateURL(args[0]); if (!values.file) throw new Error('--file is required.'); validateActions(JSON.parse(await fs.readFile(path.resolve(values.file), 'utf8')), values['allow-write']); }
   let batchURLs;
@@ -98,7 +107,11 @@ async function main() {
     print(health); process.exitCode = 2; return;
   }
   await atomicWrite(path.resolve(values.out, 'raw', 'preflight.json'), { command, status: 'ready_to_attempt', requested: batchURLs?.length, health });
-  if (command === 'capture') {
+  if (command === 'collect') {
+    if(!args[0] && !values.file) throw new Error('Provide a topic, URL or --file.');
+    const result=await collect(args[0] || values.name || path.basename(values.file),values);
+    print(result); if(!['captured','completed'].includes(result.status)) process.exitCode=2;
+  } else if (command === 'capture') {
     validateURL(args[0]);
     const output = await opencli(captureArgs(args[0], values));
     console.log(output);

@@ -1,121 +1,16 @@
-<!-- Modified by LuzernRR for LuzCrawl: popup branding and documentation. Apache-2.0; see LICENSE and NOTICE. -->
-<!DOCTYPE html>
+<!-- LuzCrawl popup; Apache-2.0, see LICENSE and NOTICE. -->
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LuzCrawl</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      width: 300px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 13px;
-      color: #1d1d1f;
-      background: #fff;
-      padding: 14px;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .header img { width: 22px; height: 22px; }
-    .header h1 { font-size: 14px; font-weight: 600; flex: 1; }
-    .header .version-tag {
-      font-size: 11px;
-      color: #86868b;
-      font-variant-numeric: tabular-nums;
-    }
-    .card {
-      border: 1px solid #ececec;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .card .status-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 11px 12px;
-      background: #fafafa;
-    }
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .dot.connected { background: #34c759; }
-    .dot.disconnected { background: #ff3b30; }
-    .dot.connecting { background: #ff9500; }
-    .status-text {
-      font-size: 13px;
-      font-weight: 600;
-      color: #1d1d1f;
-      flex: 1;
-    }
-    .daemon-version {
-      font-size: 11px;
-      color: #86868b;
-      font-variant-numeric: tabular-nums;
-    }
-    .profile-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 12px;
-      border-top: 1px solid #ececec;
-      background: #fff;
-    }
-    .profile-label {
-      font-size: 11px;
-      color: #86868b;
-      flex-shrink: 0;
-    }
-    .profile-id {
-      flex: 1;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 12px;
-      color: #1d1d1f;
-      user-select: all;
-      word-break: break-all;
-    }
-    .copy-btn {
-      flex-shrink: 0;
-      padding: 4px 9px;
-      font-size: 11px;
-      font-family: inherit;
-      color: #007aff;
-      background: transparent;
-      border: 1px solid #d2d2d7;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.12s, color 0.12s;
-    }
-    .copy-btn:hover { background: #f0f6ff; }
-    .copy-btn:active { background: #e1edff; }
-    .copy-btn.copied { color: #34c759; border-color: #34c759; background: #f0fdf4; }
-    .hint {
-      padding: 10px 12px;
-      border-top: 1px solid #ececec;
-      background: #f9fafc;
-      font-size: 11px;
-      color: #6e6e73;
-      line-height: 1.5;
-    }
-    .hint code {
-      background: #ececec;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 11px;
-    }
-    .footer {
-      margin-top: 12px;
-      text-align: center;
-      font-size: 11px;
-      color: #86868b;
-    }
-    .footer a { color: #007aff; text-decoration: none; }
-    .footer a:hover { text-decoration: underline; }
+    :root{color-scheme:light}*{box-sizing:border-box}body{width:340px;margin:0;padding:14px;background:#fbfdf9;color:#334539;font:13px/1.5 system-ui,-apple-system,"Microsoft YaHei",sans-serif}
+    .header{display:flex;align-items:center;gap:9px;margin-bottom:12px}.header img{width:30px;height:30px}.header h1{font-size:16px;margin:0;flex:1}.version-tag{font-size:10px;color:#748575}
+    .card{border:1px solid #dce7dc;border-radius:10px;background:#fff;overflow:hidden}.status-row,.profile-row{display:flex;align-items:center;gap:8px;padding:9px 11px}.profile-row{border-top:1px solid #e7eee4}.status-text{flex:1;font-weight:600}.daemon-version,.profile-label{font-size:10px;color:#758475}.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.dot.connected{background:#75a681}.dot.disconnected{background:#ba7868}.dot.connecting{background:#b29b65}.profile-id{flex:1;font:11px ui-monospace,Consolas,monospace;word-break:break-all;user-select:all}
+    button{font:inherit;cursor:pointer;border:1px solid #c9ddca;border-radius:7px;color:#3d6748;background:#e8f3e5;padding:6px 11px}.copy-btn{font-size:11px;padding:3px 8px;background:#fff}.copy-btn:hover,button:hover{background:#dcecd9}.copy-btn.copied{color:#4e7d5c}.hint{padding:8px 11px;border-top:1px solid #e7eee4;color:#788575;font-size:11px;background:#f6faf2}
+    form{margin-top:13px}label{display:block;font-size:12px;font-weight:600;margin-bottom:5px}.directory-row{display:flex;gap:6px}input{min-width:0;flex:1;padding:7px 8px;border:1px solid #d1dfcd;border-radius:7px;background:#fff;color:#334539;font:12px ui-monospace,Consolas,monospace}input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #91b29a;outline-offset:2px}.settings-status{min-height:17px;margin:5px 0 0;color:#788575;font-size:11px}.settings-status.error{color:#a65f4b}.footer{margin-top:9px;text-align:right;font-size:11px}.footer a{color:#50785c;text-decoration:none}.footer a:hover{text-decoration:underline}
   </style>
 </head>
 <body>
@@ -124,24 +19,28 @@
     <h1>LuzCrawl</h1>
     <span class="version-tag" id="extVersion"></span>
   </div>
-  <div class="card disconnected" id="card">
+  <div class="card" id="card">
     <div class="status-row">
       <span class="dot disconnected" id="dot"></span>
       <span class="status-text" id="status">检查连接…</span>
       <span class="daemon-version" id="daemonVersion"></span>
     </div>
-    <div class="profile-row" id="profileRow" style="display: none;">
+    <div class="profile-row" id="profileRow" style="display:none">
       <span class="profile-label">浏览器配置</span>
       <span class="profile-id" id="contextId"></span>
-      <button type="button" class="copy-btn" id="copyBtn" title="Copy contextId">复制</button>
+      <button type="button" class="copy-btn" id="copyBtn" title="复制浏览器配置 ID">复制</button>
     </div>
-    <div class="hint" id="hint" style="display: none;">
-      运行本 skill 的命令时自动连接。登录或验证由你在页面上完成。
+    <div class="hint" id="hint" style="display:none">运行 Skill 命令连接；登录或验证由你手动完成。</div>
+  </div>
+  <form id="directoryForm">
+    <label for="outputDir">默认保存目录</label>
+    <div class="directory-row">
+      <input id="outputDir" type="text" placeholder="E:\Research\LuzCrawl" autocomplete="off" spellcheck="false" required aria-describedby="settingsStatus">
+      <button id="saveDirectory" type="submit">保存</button>
     </div>
-  </div>
-  <div class="footer">
-    <a href="help.html" target="_blank">LuzCrawl 使用说明</a>
-  </div>
-  <script src="popup.js"></script>
+    <p id="settingsStatus" class="settings-status" role="status" aria-live="polite">绝对路径 · HTML · 下一次采集生效</p>
+  </form>
+  <div class="footer"><a href="help.html" target="_blank" rel="noopener">使用说明</a></div>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>

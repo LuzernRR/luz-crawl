@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "luz-crawl",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "LuzCrawl browser capture and local memory.",
   "extensions": {
     "com.openai": {
@@ -16,9 +16,9 @@
           "Write"
         ],
         "defaultPrompt": "Use $luz-crawl to search in the browser, verify sources and save HTML with local experience.",
-        "brandColor": "#1677FF",
-        "composerIcon": "./assets/icon.svg",
-        "logo": "./assets/logo.svg"
+        "brandColor": "#8FB396",
+        "composerIcon": "./assets/icon-400.png",
+        "logo": "./assets/logo.png"
       }
     }
   }

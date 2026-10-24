@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { canonicalURL, platformOf, searchURL, validateURL, extractURLs } from '../opencli/lib/platforms.mjs';
+import { canonicalURL, platformOf, searchURL, validateURL, extractURLs, CATALOG } from '../opencli/lib/platforms.mjs';
 import { capture } from '../opencli/lib/capture.mjs';
 import { verifyArchive, hash, mergeItems, recordExperience, findExperience, matchesQuery, safeTitle } from '../opencli/lib/archive.mjs';
 import { htmlDocument } from '../opencli/lib/html.mjs';
 import { articleMediaFromNetwork } from '../opencli/lib/extract-page.mjs';
-import { search } from '../opencli/lib/search.mjs';
+import { search, sourceCandidates } from '../opencli/lib/search.mjs';
 
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'luz-crawl-test-'));
 process.env.LUZ_CRAWL_STATE = path.join(tmp, 'state');
@@ -39,6 +39,11 @@ test('URL validation, aliases and ID deduplication', () => {
   assert.equal(canonicalURL('https://youtu.be/abc?si=1'), 'https://www.youtube.com/watch?v=abc');
   assert.equal(extractURLs('[a](https://x.com/a/status/1) — https://twitter.com/b/status/1?x=1\nhttps://x.com/a/status/2').length, 2);
   for (const platform of ['x', 'xhs', 'wechat', 'douyin', 'youtube', 'reddit', 'zhihu', 'douban', 'bilibili', 'web']) assert.ok(searchURL(platform, '中文 & plus').startsWith('https://'));
+});
+
+test('Bilibili search excludes creator upload screens and accepts real detail IDs', () => {
+  const content = {requested_url:'https://search.bilibili.com/all?keyword=Python',links:[{url:'https://member.bilibili.com/platform/upload/video/frame'},{url:'https://www.bilibili.com/video/BV1GJ411x7h7/'},{url:'https://www.bilibili.com/video/not-a-video'}]};
+  assert.deepEqual(sourceCandidates(content,CATALOG.find(site=>site.id==='bilibili')).map(item=>item.url),['https://www.bilibili.com/video/BV1GJ411x7h7/']);
 });
 
 test('virtualized tweets survive scrolls; longer expansion wins', async () => {

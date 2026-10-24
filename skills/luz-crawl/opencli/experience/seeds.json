@@ -1,6 +1,8 @@
 {
   "schema_version": 1,
   "type": "portable_route_hints_not_live_acceptance",
+  "verified_content_checked_at": "2026-10-24",
+  "verified_content_platforms": ["xhs","x","zhihu","douban","reddit","douyin","youtube","bilibili","wechat","weibo","instagram","tiktok","github","gitee","csdn","cnblogs","juejin","stackoverflow","devto","hackernews","v2ex","google","bing","ccgp","ggzy","chinabidding","qianlima","bidcenter","made-in-china"],
   "routes": [
     {"platform": "x", "when": "status contains only a short link", "action": "Open the DOM-discovered article or short link in the same browser; match the target status ID; do not archive the link shell as full article."},
     {"platform": "xhs", "when": "search adapter reports ambiguous_option", "action": "Use this plugin's browser search URL and open signed note links; this error does not prove logout."},

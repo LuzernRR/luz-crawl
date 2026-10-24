@@ -14,7 +14,11 @@ export async function preferences() {
 
 export async function rememberPreferences(values) {
   const next = await preferences();
-  if (values.out) next.output_dir = path.resolve(values.out);
+  if (values.out) {
+    next.output_dir = path.resolve(values.out);
+    next.output_updated_at = values.output_updated_at ?? Date.now();
+    if (!Number.isSafeInteger(next.output_updated_at) || next.output_updated_at < 0) throw new Error('保存时间无效。');
+  }
   if (values.format && values.format !== 'html') throw new Error('Current export contract is HTML; supported format: html.');
   if (values.format) next.format = values.format;
   if (values.window && !['foreground', 'background'].includes(values.window)) throw new Error('Window must be foreground or background.');

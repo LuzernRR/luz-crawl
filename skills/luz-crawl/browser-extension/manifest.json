@@ -38,6 +38,6 @@
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
   "short_name": "LuzCrawl",
-  "version_name": "LuzCrawl 2.3.0",
+  "version_name": "LuzCrawl 2.4.0",
   "author": "LuzernRR"
 }

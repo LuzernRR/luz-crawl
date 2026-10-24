@@ -39,7 +39,7 @@ export async function search(page, kwargs) {
   if (!kwargs.query?.trim()) throw new Error('A non-empty search query is required.');
   const site = await resolveSite(kwargs.platform, kwargs.query, kwargs.site);
   const query = site.query;
-  const routes = [{ kind: 'native', url: site.search?.replaceAll('{query}', encodeURIComponent(query)) || site.url, form: site.mode ? { mode: site.mode, parameter: site.parameter } : undefined }];
+  const routes = [{ kind: 'native', url: site.search?.replaceAll('{query}', encodeURIComponent(query)) || site.url, form: site.mode ? { mode: site.mode, parameter: site.parameter, entry_url: site.form_url } : undefined }];
   for (const url of site.alternates || []) routes.push({ kind: 'public_alternate', url: url.replaceAll('{query}', encodeURIComponent(query)) });
   if (site.public_index) routes.push({ kind: 'public_index', url: `https://www.bing.com/search?q=${encodeURIComponent(`site:${site.index_domain || site.domains[0]} ${kwargs.query}`)}` });
   if (site.preferred_route) routes.sort((a, b) => Number(b.kind === site.preferred_route) - Number(a.kind === site.preferred_route));

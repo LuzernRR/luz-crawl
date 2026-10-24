@@ -1,7 +1,7 @@
 // This function is serialized into the real browser page. Keep it free of module dependencies.
 export function extractPage({ platform, requestedURL, comments = false, includePresentation = true, articleMedia = {}, observedVideos = [], isSearch = false }) {
   const first = (selectors, parent = document) => selectors.map((selector) => parent?.querySelector(selector)).find(Boolean);
-  const text = (element) => (element?.innerText || element?.textContent || '').trim();
+  const text = (element) => (typeof element?.innerText === 'string' ? element.innerText : element?.textContent || '').trim();
   const visible = (element) => Boolean(element && element.getClientRects().length && getComputedStyle(element).visibility !== 'hidden');
   const selectors = {
     x: ['[data-testid="primaryColumn"]', 'main'],
@@ -9,6 +9,8 @@ export function extractPage({ platform, requestedURL, comments = false, includeP
     wechat: ['#js_article', '#img-content'],
     douyin: ['[data-e2e="video-detail"]', '[data-e2e="feed-active-video"]', 'main', '[data-e2e="detail-video-info"]'],
     youtube: ['ytd-watch-flexy', 'ytd-search', 'main'],
+    bilibili: ['.video-page-v3', '#app', 'main'],
+    tiktok: ['[data-e2e="browse-video"]', '[data-e2e="browse-video-desc"]', 'main'],
     reddit: ['main', '.content', 'shreddit-post', '#siteTable'],
     zhihu: ['.AnswerCard', '.Post-Main', '.Question-mainColumn', 'main'],
     douban: ['#content', '.article'],
@@ -24,6 +26,24 @@ export function extractPage({ platform, requestedURL, comments = false, includeP
   const content = text(root);
   const pageURL = location.href;
   const wantedID = requestedURL.match(/\/status\/(\d+)/)?.[1];
+  let loadedTarget, playerData;
+  if (!isSearch && platform === 'bilibili') {
+    const id = requestedURL.match(/\/video\/(BV[a-zA-Z0-9]{10}|av\d+)/)?.[1];
+    const video = window.__INITIAL_STATE__?.videoData;
+    if (id && video && (video.bvid === id || `av${video.aid}` === id)) { loadedTarget = video; playerData = window.__playinfo__?.data; }
+  }
+  if (!isSearch && platform === 'xhs') {
+    const id = requestedURL.match(/\/(?:explore|discovery\/item|search_result)\/([^/?#]+)/)?.[1];
+    const note = id && window.__INITIAL_STATE__?.note?.noteDetailMap?.[id]?.note;
+    if (note && (note.noteId || note.id) === id) loadedTarget = note;
+  }
+  if (!isSearch && platform === 'tiktok') {
+    try {
+      const data = JSON.parse(document.querySelector('#__UNIVERSAL_DATA_FOR_REHYDRATION__')?.textContent || '{}');
+      const video = data.__DEFAULT_SCOPE__?.['webapp.video-detail']?.itemInfo?.itemStruct;
+      if (video?.id && video.id === requestedURL.match(/\/(?:video|photo)\/(\d+)/)?.[1]) loadedTarget = video;
+    } catch {}
+  }
   const items = [];
   let targetArticle;
   let longformContainer;
@@ -52,6 +72,8 @@ export function extractPage({ platform, requestedURL, comments = false, includeP
     const bodySelectors = {
       xhs: ['#detail-desc', '.note-text', '.desc'], wechat: ['#js_content'],
       youtube: ['#description-inline-expander', 'ytd-text-inline-expander', '#description'],
+      bilibili: ['#v_desc .basic-desc-info', '.basic-desc-info', '.desc-info-text', '.video-desc'],
+      tiktok: ['[data-e2e="browse-video-desc"]', '[data-e2e="video-desc"]'],
       reddit: ['[slot="text-body"]', '[data-post-click-location="text-body"]', '.usertext-body'],
       zhihu: ['.RichContent-inner .RichText', '.Post-RichText', '.RichText'],
       douban: ['.topic-content', '#link-report', '.review-content', '.article'],
@@ -68,12 +90,14 @@ export function extractPage({ platform, requestedURL, comments = false, includeP
     bodyRoot = article;
     const expectedDetail = !isSearch && (platform === 'xhs' && /\/(explore|discovery\/item|search_result)\/[^/?]+/.test(requestedURL) || platform === 'wechat' && /mp\.weixin\.qq\.com\/s(?:[/?]|$)/.test(pageURL) || platform === 'youtube' && /watch\?v=|youtu\.be\//.test(requestedURL) || platform === 'zhihu' && /\/answer\/|zhuanlan\.zhihu\.com\/p\//.test(requestedURL));
     if (expectedDetail) bodyConfirmed = article !== root || (platform === 'wechat' && article.id === 'js_content');
+    if (!isSearch && platform === 'bilibili' && /\/video\//.test(requestedURL)) bodyConfirmed = Boolean(loadedTarget && root.querySelector('h1.video-title') && root.querySelector('video, #bilibili-player, .bpx-player-container'));
+    if (!isSearch && platform === 'tiktok' && /\/(?:video|photo)\//.test(requestedURL)) bodyConfirmed = Boolean(loadedTarget && (document.querySelector('video') || loadedTarget.imagePost));
     if (platform === 'reddit' && !isSearch) {
       const id = requestedURL.match(/\/comments\/([^/]+)/)?.[1];
       bodyConfirmed = postContext.matches('shreddit-post, .thing.link') && (!id || [postContext.id.replace(/^thing_/, ''), postContext.getAttribute('data-fullname')].includes(`t3_${id}`) || postContext.getAttribute('permalink')?.includes(`/comments/${id}/`));
     }
-    const value = text(article);
-    if (value) items.push({ id: pageURL, url: pageURL, kind: !bodyConfirmed ? 'page_shell' : platform === 'youtube' || platform === 'douyin' ? 'video_description' : 'page_body', text: value,
+    const value = platform === 'bilibili' && loadedTarget ? [text(root.querySelector('h1.video-title')), text(article)].filter(value => value && value !== '-').join('\n\n') : platform === 'tiktok' && bodyConfirmed ? loadedTarget.desc || text(article) : text(article);
+    if (value) items.push({ id: pageURL, url: pageURL, kind: !bodyConfirmed ? 'page_shell' : ['youtube', 'douyin', 'bilibili', 'tiktok'].includes(platform) ? 'video_description' : 'page_body', text: value,
       author: document.querySelector('meta[name="author"]')?.content || text(first(['#js_name', '.author .username', '[slot="authorName"]', '#channel-name'])),
       time: root.querySelector('time')?.dateTime || document.querySelector('meta[property="article:published_time"]')?.content || '' });
     if (comments) {
@@ -199,9 +223,35 @@ export function extractPage({ platform, requestedURL, comments = false, includeP
   const extractedComments = [];
   if (!isSearch && postRoot && bodyConfirmed && bodyItem && !gate) {
     const mediaRoot = platform === 'youtube' ? postRoot.querySelector('#player') || bodyRoot : platform === 'reddit' ? postRoot.querySelector('shreddit-post, .thing.link') || bodyRoot : ['douyin', 'zhihu', 'douban', 'wechat', 'csdn', 'github', 'cnblogs', 'juejin', 'stackoverflow'].includes(platform) ? bodyRoot : postRoot;
-    const images = (platform === 'youtube' ? [{ url: document.querySelector('meta[property="og:image"]')?.content || '', alt: document.title, source: 'observed_video_cover' }] : [...mediaRoot.querySelectorAll('img')].filter((node) => !node.closest('[data-testid*="UserAvatar"], [slot="credit-bar"], .avatar, .author, .comment-item, .comments-list, .topic-reply, .reply-item')).map((node) => ({ url: node.currentSrc || node.src || node.dataset.src || '', alt: node.alt || '' }))).filter((item) => /^https?:\/\//.test(item.url) && !(platform === 'xhs' && /^https?:\/\/sns-avatar[^/]*\.xhscdn\.com\/avatar\//.test(item.url)) && !(platform === 'douban' && /^https?:\/\/[^/]*doubanio\.com\/icon\/up/.test(item.url)));
+    let imageSources;
+    if (platform === 'bilibili' && loadedTarget) imageSources = [{ url: loadedTarget.pic, alt: loadedTarget.title, source: 'observed_video_cover' }];
+    if (platform === 'xhs' && loadedTarget?.imageList?.length) imageSources = loadedTarget.imageList.map(image => ({url:image.urlDefault || image.urlPre,alt:loadedTarget.title,source:'observed_target_page_data'}));
+    if (platform === 'tiktok' && loadedTarget) imageSources = loadedTarget.imagePost?.images?.map(image => ({url:image.imageURL?.urlList?.[0] || '',alt:loadedTarget.desc})) || [{url:loadedTarget.video?.cover || loadedTarget.video?.originCover || '',alt:loadedTarget.desc,source:'observed_video_cover'}];
+    const images = (imageSources || (platform === 'youtube' ? [{ url: document.querySelector('meta[property="og:image"]')?.content || '', alt: document.title, source: 'observed_video_cover' }] : [...mediaRoot.querySelectorAll('img')].filter((node) => !node.closest('[data-testid*="UserAvatar"], [slot="credit-bar"], .avatar, .author, .comment-item, .comments-list, .topic-reply, .reply-item')).map((node) => ({ url: node.currentSrc || node.src || node.dataset.src || '', alt: node.alt || '' })))).filter((item) => /^https?:\/\//.test(item.url || '') && !(platform === 'xhs' && /^https?:\/\/sns-avatar[^/]*\.xhscdn\.com\/avatar\//.test(item.url)) && !(platform === 'douban' && /^https?:\/\/[^/]*doubanio\.com\/icon\/up/.test(item.url))).map(item => ({...item,url:item.url.replace(/^http:/,'https:')}));
     for (const item of Object.values(articleMedia)) if (!images.some((image) => image.url === item.url)) images.push({ url: item.url, alt: item.alt || '', source: 'observed_article_response' });
     const videos = [...(platform === 'douyin' ? postRoot : mediaRoot).querySelectorAll('video')].map((node) => ({ url: node.currentSrc || node.src || node.querySelector('source')?.src || '', poster: node.poster || '', direct: /^https?:\/\//.test(node.currentSrc || node.src || node.querySelector('source')?.src || '') })).filter(item => /^(https?:\/\/|blob:)/.test(item.url));
+    let targetVideo;
+    if (platform === 'bilibili' && playerData?.dash && !playerData.is_drm) {
+      const dash = playerData.dash;
+      const video = (dash.video || []).filter(item => item.codecid === 7 && item.height <= 720).sort((a,b) => b.height - a.height)[0];
+      const audio = (dash.audio || []).find(item => /mp4a/.test(item.codecs || ''));
+      // The primary address can be a peer CDN; use an official fallback already supplied by this player.
+      const streamURL = item => [item?.baseUrl, item?.base_url, ...(item?.backupUrl || item?.backup_url || [])].find(url => /^https:\/\/[^/]+\.bilivideo\.com\//.test(url || ''));
+      const url = streamURL(video);
+      const audioURL = streamURL(audio);
+      if (/^https:\/\/[^/]+\.bilivideo\.com\//.test(url || '') && /^https:\/\/[^/]+\.bilivideo\.com\//.test(audioURL || '')) targetVideo = {url,audio_url:audioURL,mime:'video/mp4',height:video.height,source:'observed_target_player_streams'};
+    }
+    if (platform === 'xhs' && loadedTarget?.video?.media?.video?.drmType === 0) {
+      const stream = loadedTarget.video.media.stream;
+      const video = [...(stream?.h264 || []), ...(stream?.EF4 || [])].filter(item => item.format === 'mp4').sort((a,b) => b.height - a.height)[0];
+      const url = video?.masterUrl;
+      if (/^https?:\/\/[^/]+\.xhscdn\.com\//.test(url || '')) targetVideo = {url:url.replace(/^http:/,'https:'),height:video.height,source:'observed_target_player_streams'};
+    }
+    if (platform === 'tiktok' && loadedTarget?.video) {
+      const url = loadedTarget.video.PlayAddrStruct?.UrlList?.[0] || loadedTarget.video.playAddr;
+      if (/^https:\/\/[^/]+\.(?:tiktok\.com|tiktokcdn\.com)\//.test(url || '')) targetVideo = {url,height:loadedTarget.video.height,source:'observed_target_player_streams'};
+    }
+    if (targetVideo) videos.splice(0, videos.length, {...targetVideo,direct:true});
     for (const video of videos) if (/^https?:\/\//.test(video.poster) && !images.some(image => image.url === video.poster)) images.push({url:video.poster,alt:'',source:'observed_video_cover'});
     for (const item of observedVideos) if (!videos.some((video) => video.url === item.url)) videos.push({ ...item, direct: true });
     const engagement = Object.fromEntries(['likes', 'comments', 'favorites', 'shares', 'views'].map((key) => {
@@ -215,6 +265,12 @@ export function extractPage({ platform, requestedURL, comments = false, includeP
       return [key, metric(element)];
     }));
     post = { id: wantedID || pageURL.match(/\/(?:explore|search_result|answer|video|topic|note)\/([^/?#]+)/)?.[1] || pageURL, url: pageURL, title: articleTitle || document.title, text: bodyItem.text, account: account(postRoot, bodyItem.author || ''), engagement, images, videos, content_present: Boolean(bodyItem.text?.trim() || images.length || videos.length), scope: videos.length ? 'visible_post_and_video_metadata' : 'visible_post' };
+    if (platform === 'bilibili' && loadedTarget) post.account = {name:loadedTarget.owner?.name || post.account.name,handle:String(loadedTarget.owner?.mid || '') || null,profile_url:loadedTarget.owner?.mid ? `https://space.bilibili.com/${loadedTarget.owner.mid}` : null};
+    if (platform === 'tiktok' && loadedTarget) post.account = {name:loadedTarget.author?.nickname || null,handle:loadedTarget.author?.uniqueId || null,profile_url:loadedTarget.author?.uniqueId ? `https://www.tiktok.com/@${loadedTarget.author.uniqueId}` : null};
+    const counts = platform === 'bilibili' ? loadedTarget?.stat : platform === 'tiktok' ? loadedTarget?.stats : null;
+    if (counts) for (const [key, field] of Object.entries(platform === 'bilibili' ? {likes:'like',comments:'reply',favorites:'favorite',shares:'share',views:'view'} : {likes:'diggCount',comments:'commentCount',favorites:'collectCount',shares:'shareCount',views:'playCount'})) {
+      if (counts[field] !== undefined && /^\d+$/.test(String(counts[field]))) post.engagement[key] = {...metric({getAttribute:()=>String(counts[field])}),source:'observed_target_page_data'};
+    }
   }
   if (comments && platform === 'x') for (const node of root.querySelectorAll('article[data-testid="tweet"]')) {
     const permalink = node.querySelector('time')?.closest('a')?.href;
@@ -353,10 +409,11 @@ export function submitSearch({ query, mode, url, parameter = 'keywords' }) {
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, query);
   input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true }));
   const form = input.closest('form');
-  if (form && !form.querySelector('input[type="password"]')) { form.requestSubmit(); return { submitted: true, method: 'native_search_form', query }; }
-  const container = input.parentElement?.parentElement || document;
-  const button = [...container.querySelectorAll('button,[role="button"],input[type="submit"]')].find((node) => visible(node) && /^(搜索|查找|查询|搜一下|Search)$/i.test((node.innerText || node.value || node.getAttribute('aria-label') || '').trim()));
-  if (button) { button.click(); return { submitted: true, method: 'visible_search_button', query }; }
+  if (form?.querySelector('input[type="password"]')) return {submitted:false,method:'login_form_rejected',login_visible:true};
+  const container = form || input.parentElement?.parentElement || document;
+  const button = [...container.querySelectorAll('button,[role="button"],input[type="submit"]')].find((node) => visible(node) && /^(搜索(?:网页)?|查找|查询|搜一下|Search(?: the web)?)$/i.test((node.innerText || node.value || node.getAttribute('aria-label') || node.title || '').trim()));
+  if (button) { button.click(); return { submitted: true, method: 'visible_search_button', query, input:input.id || input.name, button:button.id || button.getAttribute('aria-label') }; }
+  if (form) { form.requestSubmit(); return { submitted: true, method: 'native_search_form', query, input:input.id || input.name }; }
   return { submitted: false, method: 'search_control_not_confirmed', login_visible: /登录|sign in/i.test(document.body.innerText || '') };
 }
 

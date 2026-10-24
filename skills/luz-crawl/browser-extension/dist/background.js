@@ -1,5 +1,6 @@
 // Modified by LuzernRR for LuzCrawl: branding, visible labels and help entry.
 // Based on OpenCLI Browser Bridge 1.0.24; Apache-2.0. See LICENSE and NOTICE.
+import { getOutputPreferences, setOutputPreferences } from '../preferences.js';
 const DAEMON_PORT = 19825;
 const DAEMON_HOST = "localhost";
 const DAEMON_WS_URL = `ws://${DAEMON_HOST}:${DAEMON_PORT}/ext`;
@@ -1677,6 +1678,15 @@ async function fetchDaemonVersion() {
   }
 }
 async function handleCommand(cmd) {
+  if (cmd.action === "luzcrawl-preferences") {
+    try {
+      if (cmd.op !== "get" && cmd.op !== "set") throw new Error("Unknown preferences operation");
+      const data = cmd.op === "set" ? await setOutputPreferences(cmd.values || {}) : await getOutputPreferences();
+      return { id: cmd.id, ok: true, data };
+    } catch (error) {
+      return { id: cmd.id, ok: false, error: error.message };
+    }
+  }
   const session = getSessionName(cmd.session);
   const surface = getCommandSurface(cmd);
   const leaseKey = getLeaseKey(session, surface);

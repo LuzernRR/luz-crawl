@@ -14,6 +14,7 @@ description: Search and capture real browser pages with the bundled LuzCrawl ext
 ```powershell
 node scripts/luz-crawl.mjs doctor
 node scripts/luz-crawl.mjs experience --query "关键词" --platform xhs
+node scripts/luz-crawl.mjs collect "主题或 URL" --read 1
 node scripts/luz-crawl.mjs search xhs "关键词" --read 1 --comments --download
 ```
 
@@ -21,7 +22,9 @@ node scripts/luz-crawl.mjs search xhs "关键词" --read 1 --comments --download
 
 每次搜索都打开真实浏览器执行新的检索。历史经验只影响路线顺序、关键词建议，不能替代本次访问。优先用户原词，结合已保存偏好和专业词扩展查询，不悄悄改换主题。默认串行调用；并行任务也必须分别收尾。
 
-[53 站目录](references/platforms.md) 覆盖小红书、X、公众号、抖音、YouTube、Reddit、知乎、豆瓣、GitHub、CSDN、搜索引擎、招投标采购、1688、企业查询、灰豚类数据工具和创作者后台。目录是路线候选，实测边界见 [验证结果](references/validation.md)。
+主题优先 collect：Agent 先规划平台和关键词，可用 --file plan.json 指定各站查询；--platform all 按已验证可用路线逐站执行。链接直接读取来源。collect 默认下载可访问媒体，raw 保存来源与任务，输出一份包含已取得文字、图片、视频和评论的 HTML。手动登录续接后用 report COLLECTION_DIRECTORY 更新合集；不把未取得的内容标为完整。
+
+[可用网站](references/platforms.md) 只展示已取得目标正文的公开网站。其他内置路线或新增站点须重新验证，不能从搜索候选或后台外壳推断可用；实测边界见 [验证结果](references/validation.md)。
 
 ```powershell
 node scripts/luz-crawl.mjs search github "browser automation" --read 1
@@ -52,7 +55,7 @@ node scripts/luz-crawl.mjs cancel TASK_ID
 
 ## 保存、下载与记忆
 
-默认读 preferences.json 中用户指定的路径；未配置时为当前工作目录 outputs/luz-crawl。支持 HTML，命名 NNN_原标题.html。输出根目录只放编号 HTML、一个参考链接.md 和一个 raw/；原文快照、评论、截图、媒体、报告证据与安装包在 raw 内。已有来源拒绝无提示覆盖；明确 --resume 时校验后追加当前快照。
+用户可在扩展弹窗保存绝对目录，或用 remember 指定目录；采集前同步最新保存的偏好，本次 --out 优先。未配置时为当前工作目录 outputs/luz-crawl。支持 HTML，命名 NNN_原标题.html。输出根目录只放编号 HTML、一个参考链接.md 和一个 raw/；原文快照、评论、截图、媒体、报告证据与安装包在 raw 内。已有来源拒绝无提示覆盖；明确 --resume 时校验后追加当前快照。目录未同步先重载 LuzCrawl 扩展。
 
 post 保存当前目标账号、正文、图片/视频与互动；comments 保存本次加载的条目。隐藏数据为 null，缩写数保留 raw 与 approximate。不要把视频简介称为完整视频、把可见评论称为全量评论。下载在页面关闭后执行，失败另报；不导出 Cookie。字段、接口和目录见 [README](README.md) 与 [证据规范](references/evidence.md)。
 

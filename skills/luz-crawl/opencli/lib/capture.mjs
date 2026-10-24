@@ -8,7 +8,7 @@ import { htmlDocument } from './html.mjs';
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const expression = (fn, value) => `(${fn.toString()})(${JSON.stringify(value)})`;
 const uniq = (items, key) => [...new Map(items.map((item) => [key(item), item])).values()];
-const EXTRACTOR_VERSION = '2.3.0';
+const EXTRACTOR_VERSION = '2.4.0';
 
 export async function capture(page, options) {
   const started = Date.now();
@@ -48,7 +48,7 @@ export async function capture(page, options) {
     if (result.platform === 'x' && page.startNetworkCapture) {
       try { networkCapture = await page.startNetworkCapture('/i/api/graphql/'); } catch (error) { console.error(`[luz-crawl] Optional response capture unavailable: ${error.message}`); }
     }
-    if (!options.current_page) await page.goto(url);
+    if (!options.current_page) await page.goto(validateURL(options.search_form?.entry_url || url).href);
     result.browser_opened = true;
     if (options.search_form) {
       await pause(900);

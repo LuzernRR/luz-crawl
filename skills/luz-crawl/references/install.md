@@ -1,28 +1,71 @@
-# 安装 LuzCrawl
+# 安装与使用
 
-本目录包含完整 skill、原生采集插件、本地记忆与可直接导入的 browser-extension/。扩展名称、弹窗和标签组均显示 LuzCrawl；兼容的目录和命令 ID 保持 luz-crawl。
+## 安装
 
-1. 保留完整 Skill 目录，例如自己的 ~/.codex/skills/luz-crawl。Node.js 24.5+；当前采集引擎基线 1.8.8、浏览器协议 1.0.24。
-2. 运行 `node scripts/luz-crawl.mjs install` 注册本地 opencli/。已有高版本运行时不要静默覆盖，可用 LUZ_OPENCLI_ROOT 指向独立的 1.8.8 安装。
-3. 在 Edge 的扩展页开启开发者模式，选择“加载解压缩的扩展”，导入本目录 browser-extension/。Chrome 同理。文件夹内直接有 manifest.json，不能选择上一级 skill 文件夹，也不能直接选择 ZIP。
-4. 停用旧桥接扩展副本以免同一资料出现两个连接。旧标签任务先迁移/关闭，个人经验仍保存在本 skill。扩展的安装和浏览器授权按当前工具权限进行，必要时由用户完成一次操作。修改名称或图标后点击 LuzCrawl 的“重新加载”；浏览器调试提示读取已加载扩展的 manifest.name，文件修改不会即时改变旧进程。
-5. 运行 doctor，核对 state=ready、extension_connected=true、bundled_loaded=true；再运行一条真实搜索。多个浏览器配置时使用 --profile 选定连接。
+1. Node.js 24.5+，安装 `npm install -g @jackwener/opencli@1.8.8`。
+2. 保留完整 Skill：复制 `luz-crawl-skill.zip` 解压后的 luz-crawl 到 `~/.codex/skills/luz-crawl/`，或使用完整仓库 / Codex 插件包。从最终 Skill 目录运行 `node scripts/luz-crawl.mjs install`，再运行 `opencli daemon restart`。
+3. Edge / Chrome 扩展页 → 开发者模式 → 加载解压缩的扩展 → Skill 内 **browser-extension/**。文件夹中直接有 manifest.json；不能选上一级或 ZIP。停用旧桥接副本。
+4. `node scripts/luz-crawl.mjs doctor`：ready 与 bundled_loaded 均为 true。更新扩展后“重新加载”；多个资料用 `--profile ID`。
+5. Codex 在新对话使用 `$luz-crawl`。移动 Skill 后重新运行 install，并加载最终路径中的扩展。
 
-未配置偏好时，HTML 结果在当前工作目录 outputs/luz-crawl；已记住的用户路径优先。记忆在本目录 opencli/memory/，单次 --out 不改变默认。升级前保留个人 memory/；不要直接覆盖自己的 preferences/events/pending。node_modules 可能是共享运行时 junction，不能当冗余代码递归删除。
+| 安装包 | 用法 |
+| :--- | :--- |
+| luz-crawl-skill.zip | 完整 Skill，推荐；复制整个 luz-crawl 文件夹 |
+| luz-crawl-codex-plugin.zip | 根目录有 .codex-plugin/plugin.json 与完整 Skill；按客户端插件流程安装 |
+| luz-crawl-opencli-plugin.zip | `opencli plugin install "解压目录"`，再导入其中 browser-extension/ |
+| LuzCrawl-browser-extension.zip | 独立浏览器扩展；解压后选择直接有 manifest.json 的文件夹 |
 
-登录/验证出现时最多保留当前人工操作的一页，其他任务保存状态并关闭。运行 `continue TASK_ID` 会切换到该任务，必要时重新打开页面；用户完成操作后继续核验并关闭。不通过复制 Cookie 或账号资料实现迁移。连接成功、文件夹存在、打包成功分别不能证明已登录、已读网页或 Codex 客户端已重载新显示名。
+升级保留个人 `opencli/memory/`，不要覆盖 preferences / events / pending。发布包不包含个人记忆或 node_modules。高版本运行时可用 `LUZ_OPENCLI_ROOT` 指向独立 1.8.8 安装。
 
-打包命令输出四个 ZIP：完整 skill、Codex 插件、原生采集插件和独立浏览器扩展。每包有 SHA-256 清单。个人记忆、待登录任务、旧资料、node_modules 与原文归档不进分发包；包中的默认记忆按设备创建。Codex 插件清单的 displayName 是 LuzCrawl，skills 目录提供同一完整 skill。
+## 使用与下载
 
-浏览器扩展保留上游 1.0.24 的协议和安全检查，本地化名称、弹窗、标签组与安装说明。协议头、存储键和运行时包标识用于兼容，不作盲目替换。上游为 https://github.com/jackwener/opencli ，Apache-2.0，完整 LICENSE 与修改说明 NOTICE 随扩展保留。
+```powershell
+node scripts/luz-crawl.mjs search xhs "关键词" --read 1 --comments --download
+node scripts/luz-crawl.mjs capture "https://example.com/article" --comments --download
+node scripts/luz-crawl.mjs download "E:\Research\LuzCrawl\raw\001_原标题"
+```
 
-## ZIP 和删除旧副本
+补下载目录使用返回的 folder。复制给 Agent：
 
-- luz-crawl-skill.zip：解压所得 luz-crawl 文件夹为完整 Skill，复制到自己的 skills 目录。
-- luz-crawl-codex-plugin.zip：根目录有 .codex-plugin/plugin.json 和同一完整 Skill，按 Codex 插件流程导入。
-- luz-crawl-opencli-plugin.zip：原生采集插件；在采集引擎中安装该解压目录，再导入其中 browser-extension。日常使用推荐完整 Skill。
-- LuzCrawl-browser-extension.zip：解压后选择直接含 manifest.json 的文件夹；不能选择 ZIP 文件本身。
+> 使用 $luz-crawl 抓取这条链接：粘贴 URL。保存 HTML 到 E:\Research\LuzCrawl，下载帖子图片与可访问视频，记录作者、互动数与已加载评论。遇登录让我手动完成，结束后关闭工具页。
 
-删除旧浏览器副本：打开 edge://extensions 或 chrome://extensions，找到旧 OpenCLI / Browser Bridge，点击“移除”并确认；保留 LuzCrawl。只停用也能防止重复连接。旧任务先停放保存，不能把未完成任务一并删除。
+## 保存目录
 
-安装包附 PACKAGE-CHECKSUMS.json，发布 checksums.json 给出各 ZIP 的 SHA-256。PowerShell 可运行 Get-FileHash -Algorithm SHA256 验证下载文件；不要覆盖已安装 Skill 的个人 memory/。
+扩展弹窗 → 默认保存目录 → 绝对路径 → 保存；下一次命令 / Agent 采集生效。也可：
+
+```powershell
+node scripts/luz-crawl.mjs remember --out "E:\Research\LuzCrawl" --format html
+```
+
+本次 `--out` 优先，其次浏览器 / 命令最新保存的目录，未设置为 outputs/luz-crawl。结果仅编号 HTML、参考链接.md、raw/。单次 --out 不改变偏好；原有来源用 --resume 校验后续接。
+
+## 登录与关闭
+
+`pending` 查看待办，手动完成后 `continue TASK_ID`；明确取消用 `cancel TASK_ID`。最多保留一页供手动操作，其余任务停放关闭。正常完成关闭工具页，保留用户原有标签。
+
+## 浏览器动作
+
+保存 actions.json：
+
+```json
+[
+  { "action": "read" },
+  { "action": "scroll", "direction": "down", "amount": 600 },
+  { "action": "screenshot" }
+]
+```
+
+```powershell
+node scripts/luz-crawl.mjs browser "https://example.com" --file actions.json
+```
+
+最多 20 步。click / type 需唯一可见 selector，type 还需 text；调用前取得对目标与内容的明确授权，并加 --allow-write。点击仅触发一次事件，后续 read 核验；密码手动输入，不接受任意 JavaScript / Cookie 导出 / shell。真实点赞与发送尚未验收。
+
+## 排错
+
+- 断连：扩展路径、旧副本、daemon、--profile；更新后重载扩展。
+- 目录未同步：重载 LuzCrawl，再运行采集；本次 --out 优先。
+- partial：查看 limitations。404、限流、下载失败不等于未登录。
+- 删除旧扩展：扩展管理页 → 旧 OpenCLI / Browser Bridge → 移除；保留 LuzCrawl 与停放任务。
+
+浏览器桥接协议保持 1.0.24；上游标识与 Apache-2.0 法律文件保留。下载包使用 checksums.json / PACKAGE-CHECKSUMS.json 校验；`Get-FileHash -Algorithm SHA256` 核对文件。

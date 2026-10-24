@@ -29,12 +29,13 @@ export async function fetchMedia(value, source, options = {}, redirects = 0) {
   const addresses = await lookup(url.hostname.replace(/^\[|\]$/g, ''), { all: true });
   if (!addresses.length || !allowLocal && addresses.some(({ address }) => privateAddress(address))) throw new Error('Media host must resolve to public addresses.');
   const address = addresses[0];
+  const biliMedia = /(^|\.)bilibili\.com$/.test(sourceURL.hostname) && /(^|\.)(bilivideo\.com|hdslb\.com)$/.test(url.hostname);
   const response = await new Promise((resolve, reject) => {
     const request = (url.protocol === 'https:' ? https : http).get(url, {
       signal: options.signal,
       agent: agents[url.protocol],
       lookup: (hostname, settings, callback) => hostname === url.hostname.replace(/^\[|\]$/g, '') ? settings.all ? callback(null, [address]) : callback(null, address.address, address.family) : lookupHost(hostname, settings, callback),
-      headers: { Accept: '*/*', 'User-Agent': 'LuzCrawl/2.3' },
+      headers: { Accept: '*/*', 'User-Agent': 'LuzCrawl/2.4', ...(biliMedia ? { Referer: 'https://www.bilibili.com/' } : {}) },
     }, resolve);
     request.on('error', reject);
   });

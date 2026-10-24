@@ -9,6 +9,7 @@ import { downloadArchive } from '../opencli/lib/download.mjs';
 import { privateAddress, validateMediaURL, fetchMedia } from '../opencli/lib/media.mjs';
 import { observedPostVideos } from '../opencli/lib/extract-page.mjs';
 import { validateActions, browserActions } from '../opencli/lib/browser-actions.mjs';
+import { sourceMarkup } from '../opencli/lib/report.mjs';
 
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'luzcrawl-media-'));
 test.after(() => fs.rm(tmp, { recursive: true, force: true }));
@@ -45,6 +46,40 @@ test('refuses media type confusion, reports missing video and does not claim emp
   assert.equal((await downloadArchive(await archive('empty'))).status, 'no_media');
   await fs.writeFile(path.join(folder, '.capture.lock'), 'already running');
   await assert.rejects(() => downloadArchive(folder), { code: 'EEXIST' });
+});
+
+test('paired Bilibili streams require MP4 bytes and preserve both parts in the manifest', async () => {
+  const folder = await archive('dash',{images:[],videos:[{url:'https://upos.bilivideo.com/video.m4s',audio_url:'https://upos.bilivideo.com/audio.m4s',mime:'video/mp4'}]});
+  const content = JSON.stringify({requested_url:'https://www.bilibili.com/video/BV1GJ411x7h7/',url_check:{valid_content:true},post:{images:[],videos:[{url:'https://upos.bilivideo.com/video.m4s',audio_url:'https://upos.bilivideo.com/audio.m4s',mime:'video/mp4'}]}});
+  await atomicWrite(path.join(folder,'raw/content.json'),content);
+  await atomicWrite(path.join(folder,'raw/manifest.json'),{files:[{path:'raw/content.json',sha256:hash(content)}]});
+  const bytes = Buffer.from([0,0,0,16,102,116,121,112,105,115,111,109,0,0,0,0]);
+  const result = await downloadArchive(folder,{fetchAsset:async()=>new Response(bytes,{headers:{'content-type':'application/octet-stream'}}),muxHelper:async(video,audio,dir)=>{const file=path.join(dir,'merged.mp4');await fs.writeFile(file,bytes);return{file,url:video.url,bytes:bytes.length,sha256:hash(bytes),mime:'video/mp4',parts:[video,audio]};}});
+  assert.equal(result.downloaded,1); assert.equal(result.files[0].parts.length,2); assert.ok((await verifyArchive(folder)).ok);
+  const bad = await archive('bad-stream',{images:[],videos:[{url:'https://upos.bilivideo.com/video.m4s',mime:'video/mp4'}]});
+  const rejected = await downloadArchive(bad,{fetchAsset:async()=>new Response('<html>login</html>',{headers:{'content-type':'application/octet-stream'}}),videoFallback:false});
+  assert.equal(rejected.downloaded,0); assert.equal(rejected.status,'partial');
+});
+
+test('a public video helper can recover a denied direct stream while preserving the failed attempt',async()=>{
+  const folder=await archive('recovered',{images:[],videos:[{url:'https://example.com/video.mp4'}]});
+  const result=await downloadArchive(folder,{fetchAsset:async()=>new Response('',{status:403}),videoHelper:async(_,directory)=>{const file=path.join(directory,'recovered.mp4');await fs.writeFile(file,'fixture-video');return{files:[file]};}});
+  assert.equal(result.status,'downloaded');assert.equal(result.downloaded,1);assert.equal(result.failures[0].error,'HTTP 403');
+  assert.ok((await verifyArchive(folder)).ok);
+});
+
+test('download refreshes both HTML copies with full text, inline pictures and a relative video player', async () => {
+  const output = path.join(tmp,'html-output'); const folder=path.join(output,'raw','001_原标题'); const name='001_原标题.html';
+  const content = JSON.stringify({requested_url:'https://example.com/article',platform:'web',url_check:{valid_content:true},title:'原标题',status:'captured',items:[{kind:'page_body',text:'正文尾部不得省略'}],comments:[{text:'评论最后一句'}],post:{text:'正文尾部不得省略',images:[{url:'https://example.com/picture'}],videos:[{url:'https://example.com/clip'}]}});
+  const html="<!doctype html><meta http-equiv=\"Content-Security-Policy\" content=\"media-src https: http:\"><body><p>原排版</p></body></html>";
+  await atomicWrite(path.join(folder,'raw/content.json'),content); await atomicWrite(path.join(folder,name),html); await atomicWrite(path.join(output,name),html);
+  await atomicWrite(path.join(folder,'raw/manifest.json'),{output_layout:'html_and_raw_v1',primary_file:name,files:[{path:'raw/content.json',sha256:hash(content)},{path:name,sha256:hash(html)}]});
+  const fetchAsset=async url=>new Response('media-bytes',{headers:{'content-type':url.endsWith('picture')?'image/png':'video/mp4'}});
+  const result=await downloadArchive(folder,{fetchAsset}); assert.equal(result.export.videos,1);
+  let delivered=await fs.readFile(path.join(output,name),'utf8'); assert.ok(delivered.includes('data:image/png;base64,'));assert.match(delivered,/<video[^>]+src="raw\//); assert.ok(delivered.includes('评论最后一句') && delivered.includes('正文尾部不得省略'));
+  assert.ok((await verifyArchive(folder)).ok); await downloadArchive(folder,{fetchAsset});
+  delivered=await fs.readFile(path.join(output,name),'utf8'); assert.equal(delivered.split('<!-- LUZCRAWL_ARCHIVE_MEDIA -->').length,2); assert.ok((await verifyArchive(folder)).ok);
+  await assert.rejects(()=>sourceMarkup({folder,content:JSON.parse(content),downloads:{files:[{file:path.join(tmp,'outside.png'),url:'https://example.com/picture',mime:'image/png',sha256:'wrong'}]}},output),/escapes|ENOENT/);
 });
 
 test('media fetch rejects private addresses and redirects outside an authorized local fixture', async () => {
