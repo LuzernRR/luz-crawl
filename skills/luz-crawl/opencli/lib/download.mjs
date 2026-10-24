@@ -9,12 +9,14 @@ import { atomicWrite, hash, verifyArchive } from './archive.mjs';
 import { validateURL } from './platforms.mjs';
 import { validateMediaURL, fetchMedia } from './media.mjs';
 import { appendMediaExport } from './report.mjs';
+import { createExecutionPolicy } from './execution.mjs';
+import { classifyFailure, httpFailure, OperationError } from './failure.mjs';
 
-async function directDownload(item, source, mediaDir, fetchAsset) {
+async function directDownload(item, source, mediaDir, fetchAsset, knownFiles) {
   const url = validateMediaURL(item.url, source);
   const options = { signal: AbortSignal.timeout(60000), credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'manual' };
   const response = await (fetchAsset ? fetchAsset(url, options) : fetchMedia(url, source, options));
-  if (!response.ok) { await response.body?.cancel(); throw new Error(`HTTP ${response.status}`); }
+  if (!response.ok) { await response.body?.cancel(); throw httpFailure(response); }
   const receivedMime = (response.headers.get('content-type') || '').split(';')[0].trim();
   const stream = receivedMime === 'application/octet-stream' && ['video/mp4', 'audio/mp4'].includes(item.mime) && /(^|\.)bilivideo\.com$/.test(new URL(url).hostname) && /\.m4s$/.test(new URL(url).pathname) && /(^|\.)bilibili\.com$/.test(new URL(source).hostname);
   const mime = stream ? item.mime : receivedMime;
@@ -22,7 +24,11 @@ async function directDownload(item, source, mediaDir, fetchAsset) {
   const extension = types[mime];
   if (!extension || !mime.startsWith(item.kind + '/')) { await response.body?.cancel(); throw new Error(`Unsupported ${item.kind} MIME: ${mime}`); }
   const file = path.join(mediaDir, `${item.kind}-${hash(url).slice(0, 12)}.${extension}`);
-  try { await fs.access(file); await response.body?.cancel(); return { url, file, reused: true, bytes: (await fs.stat(file)).size, sha256: hash(await fs.readFile(file)), mime }; }
+  try {
+    const stat = await fs.lstat(file); await response.body?.cancel();
+    if (!stat.isFile() || !knownFiles.has(file) || knownFiles.get(file) !== hash(await fs.readFile(file))) throw new OperationError('unverified_media', 'Existing media is unverified; inspect the archive before retrying.');
+    return { url, file, reused: true, bytes: stat.size, sha256: knownFiles.get(file), mime };
+  }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
   const partial = `${file}.${randomUUID()}.part`;
   let bytes = 0;
@@ -56,7 +62,7 @@ async function mediaTool(command, args, timeout = 180000) {
 
 async function publicVideo(source, mediaDir) {
   if(/(^|\.)bilibili\.com$/.test(validateURL(source).hostname)) return {files:[],error:'Bilibili requires a fresh browser capture of its player streams and FFmpeg.'};
-  const args = ['--ignore-config', '--no-cache-dir', '--js-runtimes', `node:${process.execPath}`, '--no-playlist', '--no-overwrites', '--no-progress', '--quiet', '--restrict-filenames', '--socket-timeout', '20', '--retries', '1', '--max-filesize', '250M', '--format', 'bv*[height<=720][vcodec^=avc1]+ba[acodec^=mp4a]/b[height<=720][vcodec^=h264]/b[height<=720][vcodec^=avc1]/best[height<=720]', '--merge-output-format', 'mp4', '--paths', mediaDir, '--output', 'video-%(id)s-%(format_id)s.%(ext)s', '--print', 'after_move:filepath', '--', validateURL(source).href];
+  const args = ['--ignore-config', '--no-cache-dir', '--js-runtimes', `node:${process.execPath}`, '--no-playlist', '--no-overwrites', '--no-progress', '--quiet', '--restrict-filenames', '--socket-timeout', '20', '--retries', '0', '--fragment-retries', '0', '--extractor-retries', '0', '--max-filesize', '250M', '--format', 'bv*[height<=720][vcodec^=avc1]+ba[acodec^=mp4a]/b[height<=720][vcodec^=h264]/b[height<=720][vcodec^=avc1]/best[height<=720]', '--merge-output-format', 'mp4', '--paths', mediaDir, '--output', 'video-%(id)s-%(format_id)s.%(ext)s', '--print', 'after_move:filepath', '--', validateURL(source).href];
   const result = await mediaTool('yt-dlp', args);
   return { files: result.error ? [] : result.output.trim().split(/\r?\n/).filter(Boolean), error: result.error };
 }
@@ -74,7 +80,8 @@ async function mergeVideo(video, audio, mediaDir) {
   } finally { await fs.rm(partial, { force: true }); }
 }
 
-export async function downloadArchive(directory, { fetchAsset, videoFallback = true, videoHelper = publicVideo, muxHelper = mergeVideo } = {}) {
+export async function downloadArchive(directory, options = {}) {
+  const { fetchAsset, videoFallback = true, videoHelper = publicVideo, muxHelper = mergeVideo } = options;
   const folder = path.resolve(directory);
   const lock = path.join(folder, '.capture.lock');
   await fs.writeFile(lock, JSON.stringify({ pid: process.pid, action: 'download' }), { flag: 'wx' });
@@ -84,25 +91,48 @@ export async function downloadArchive(directory, { fetchAsset, videoFallback = t
     const content = JSON.parse(await fs.readFile(path.join(folder, 'raw/content.json'), 'utf8'));
     if (!content.url_check?.valid_content) throw new Error('Download requires a browser-verified source body.');
     const source = content.resolved_url || content.requested_url;
+    const policy = await createExecutionPolicy({ profile: content.browser_profile, ...options });
+    const manifestFile = path.join(folder, 'raw/manifest.json');
+    const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8'));
+    const knownFiles = new Map(manifest.files.map(item => [path.resolve(folder, item.path), item.sha256]));
     const images = content.post?.images || (content.media || []).filter((item) => item.kind === 'img');
     const videos = content.post?.videos || (content.media || []).filter((item) => item.kind === 'video');
     const assets = [...new Map([...images.map((item) => ({ ...item, kind: 'image' })), ...videos.filter((item) => /^https?:\/\//.test(item.url || '')).map((item) => ({ ...item, kind: 'video' }))].map((item) => [item.url, item])).values()];
     const mediaDir = path.join(folder, 'raw/media'); await fs.mkdir(mediaDir, { recursive: true });
     if (!(await fs.realpath(mediaDir)).startsWith((await fs.realpath(folder)) + path.sep)) throw new Error('Media directory resolves outside archive.');
-    const files = [], failures = [];
+    const files = [], failures = [], retainedParts = [];
+    let stopped, directAttempts = 0;
+    const downloadItem = async item => {
+      const file = await policy.run('media', source, () => directDownload(item, source, mediaDir, fetchAsset, knownFiles), { label: item.kind });
+      knownFiles.set(file.file, file.sha256); retainedParts.push(file); return file;
+    };
     for (const item of assets) {
+      directAttempts++;
       try {
-        const downloaded = await directDownload(item, source, mediaDir, fetchAsset);
+        const downloaded = await downloadItem(item);
         if (item.kind === 'video' && item.audio_url) {
-          const audio = await directDownload({url:item.audio_url,kind:'audio',mime:'audio/mp4'},source,mediaDir,fetchAsset);
+          const audio = await downloadItem({url:item.audio_url,kind:'audio',mime:'audio/mp4'});
           files.push(await muxHelper(downloaded,audio,mediaDir));
         } else files.push(downloaded);
       }
-      catch (error) { failures.push({ url: item.url, kind: item.kind, error: error.message }); }
+      catch (error) {
+        const failure = classifyFailure(error); failures.push({ url: item.url, kind: item.kind, error: failure.message, failure: failure.toJSON() });
+        if (['rate_limited', 'login_required', 'verification_required', 'operation_budget', 'cancelled'].includes(failure.code)) { stopped = failure.code; break; }
+      }
     }
     let fallback;
-    if (videoFallback && videos.length && !files.some((file) => /^video\//.test(file.mime))) {
-      fallback = await videoHelper(source, mediaDir);
+    if (!stopped && videoFallback && videos.length && !files.some((file) => /^video\//.test(file.mime))) {
+      try {
+        fallback = await policy.run('media', source, async () => {
+          const result = await videoHelper(source, mediaDir);
+          if (result.error && !result.files?.length) throw new Error(result.error);
+          return result;
+        }, { idempotent: false, label: 'public_video_helper_once' });
+      } catch (error) {
+        const failure = classifyFailure(error, { idempotent: false }); fallback = { files: [], error: failure.message, failure: failure.toJSON() };
+        failures.push({ kind: 'video_helper', error: failure.message, failure: failure.toJSON() });
+        if (['rate_limited', 'login_required', 'verification_required', 'operation_budget', 'cancelled'].includes(failure.code)) stopped = failure.code;
+      }
       for (const file of fallback.files) {
         const resolved = path.resolve(file);
         if (!resolved.startsWith(mediaDir + path.sep)) { failures.push({ error: 'Video helper returned a path outside its media directory.' }); continue; }
@@ -114,15 +144,13 @@ export async function downloadArchive(directory, { fetchAsset, videoFallback = t
     }
     const missingImages = images.some(image => !files.some(file => file.url === image.url && /^image\//.test(file.mime)));
     const missingVideos = files.filter(file => /^video\/(mp4|webm)$/.test(file.mime)).length < new Set(videos.map(video => video.url)).size;
-    const result = { status: !images.length && !videos.length ? 'no_media' : missingImages || missingVideos ? 'partial' : 'downloaded', requested_images: images.length, requested_videos: videos.length, attempted_direct: assets.length, downloaded: files.length, files, failures, video_helper: fallback, scope: 'browser_observed_media_and_optional_public_video', at: new Date().toISOString() };
-    const manifestFile = path.join(folder, 'raw/manifest.json');
-    const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8'));
+    const result = { status: !images.length && !videos.length ? 'no_media' : missingImages || missingVideos ? 'partial' : 'downloaded', stop_reason: stopped, requested_images: images.length, requested_videos: videos.length, attempted_direct: directAttempts, downloaded: files.length, files, failures, retained_parts: retainedParts.filter(part => !files.some(file => file.file === part.file)), video_helper: fallback, execution: policy.summary(), scope: 'browser_observed_media_and_optional_public_video', at: new Date().toISOString() };
     const records = new Map(manifest.files.map((item) => [item.path, item]));
     try {
       const exported = await appendMediaExport(folder,content,result,manifest);
       if(exported) { result.export = exported; records.set(exported.path,{path:exported.path,bytes:exported.bytes,sha256:exported.sha256}); manifest.delivery_media = {images:exported.images,videos:exported.videos}; }
     } catch(error) { result.export = {status:'failed',error:error.message}; result.status='partial'; }
-    for (const file of files.flatMap(file => [...(file.parts || []),file])) { const relative = path.relative(folder, file.file).split(path.sep).join('/'); records.set(relative, { path: relative, bytes: file.bytes, sha256: file.sha256 }); }
+    for (const file of [...retainedParts, ...files.flatMap(file => [...(file.parts || []),file])]) { const relative = path.relative(folder, file.file).split(path.sep).join('/'); records.set(relative, { path: relative, bytes: file.bytes, sha256: file.sha256 }); }
     const json = JSON.stringify(result, null, 2) + '\n';
     await atomicWrite(path.join(folder, 'raw/downloads.json'), json);
     records.set('raw/downloads.json', { path: 'raw/downloads.json', bytes: Buffer.byteLength(json), sha256: hash(json) });
@@ -131,10 +159,11 @@ export async function downloadArchive(directory, { fetchAsset, videoFallback = t
   } finally { await fs.rm(lock); }
 }
 
-export async function downloadResult(result) {
+export async function downloadResult(result, options = {}) {
+  const policy = await createExecutionPolicy(options);
   for (const source of result.sources || [result]) {
     if (!source.folder || !source.url_check?.valid_content) continue;
-    try { source.downloads = await downloadArchive(source.folder); }
+    try { source.downloads = await downloadArchive(source.folder, { ...options, executionPolicy: policy }); }
     catch (error) { source.downloads = { status: 'failed', error: error.message }; }
   }
   return result;

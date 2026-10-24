@@ -5,6 +5,7 @@ import { lookup as lookupHost } from 'node:dns';
 import { isIP } from 'node:net';
 import { Readable } from 'node:stream';
 import { validateURL } from './platforms.mjs';
+import { VERSION } from './version.mjs';
 const agents = { 'http:': new http.Agent({ proxyEnv: process.env }), 'https:': new https.Agent({ proxyEnv: process.env }) };
 
 export function privateAddress(address) {
@@ -35,7 +36,7 @@ export async function fetchMedia(value, source, options = {}, redirects = 0) {
       signal: options.signal,
       agent: agents[url.protocol],
       lookup: (hostname, settings, callback) => hostname === url.hostname.replace(/^\[|\]$/g, '') ? settings.all ? callback(null, [address]) : callback(null, address.address, address.family) : lookupHost(hostname, settings, callback),
-      headers: { Accept: '*/*', 'User-Agent': 'LuzCrawl/2.4', ...(biliMedia ? { Referer: 'https://www.bilibili.com/' } : {}) },
+      headers: { Accept: '*/*', 'User-Agent': `LuzCrawl/${VERSION}`, ...(biliMedia ? { Referer: 'https://www.bilibili.com/' } : {}) },
     }, resolve);
     request.on('error', reject);
   });

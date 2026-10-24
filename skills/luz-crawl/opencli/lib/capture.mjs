@@ -4,17 +4,21 @@ import { extractPage, expandPage, scrollPage, articleMediaFromNetwork, observedP
 import { platformOf, validateURL, canonicalURL, sourceURL } from './platforms.mjs';
 import { DEFAULT_OUTPUT, allocateRun, nameRun, atomicWrite, hash, mergeItems, recordExperience, recordReference, verifyArchive } from './archive.mjs';
 import { htmlDocument } from './html.mjs';
+import { createBrowserOperations } from './browser-operations.mjs';
+import { classifyFailure, OperationError } from './failure.mjs';
+import { VERSION } from './version.mjs';
 
-const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const expression = (fn, value) => `(${fn.toString()})(${JSON.stringify(value)})`;
 const uniq = (items, key) => [...new Map(items.map((item) => [key(item), item])).values()];
-const EXTRACTOR_VERSION = '2.4.0';
+const EXTRACTOR_VERSION = VERSION;
 
-export async function capture(page, options) {
+export async function capture(page, options, sharedOperations) {
   const started = Date.now();
   const url = validateURL(options.url).href;
   const budget = Number(options.scrolls ?? 20);
   if (!Number.isInteger(budget) || budget < 0 || budget > 500) throw new Error('--scrolls must be an integer from 0 to 500.');
+  const operations = sharedOperations || await createBrowserOperations(page, options);
+  operations.url = url;
+  const pause = ms => operations.policy.delay(ms);
   const run = await allocateRun(options.out || DEFAULT_OUTPUT, url, Boolean(options.resume));
   const file = (name) => path.join(run.folder, name);
   let priorContent;
@@ -46,38 +50,38 @@ export async function capture(page, options) {
     result.extractor_version = EXTRACTOR_VERSION;
     console.error(`[luz-crawl] Opening ${sourceURL(url)}`);
     if (result.platform === 'x' && page.startNetworkCapture) {
-      try { networkCapture = await page.startNetworkCapture('/i/api/graphql/'); } catch (error) { console.error(`[luz-crawl] Optional response capture unavailable: ${error.message}`); }
+      try { networkCapture = await operations.startResponseCapture('/i/api/graphql/'); } catch (error) { console.error(`[luz-crawl] Optional response capture unavailable: ${error.message}`); }
     }
-    if (!options.current_page) await page.goto(validateURL(options.search_form?.entry_url || url).href);
+    if (!options.current_page) await operations.navigate(validateURL(options.search_form?.entry_url || url).href);
     result.browser_opened = true;
     if (options.search_form) {
       await pause(900);
-      result.search_action = await page.evaluate(expression(submitSearch, { ...options.search_form, url, query: options.query }));
+      result.search_action = await operations.evaluate(submitSearch, { ...options.search_form, url, query: options.query }, { idempotent: false, label: 'submit_search_once' });
       if (result.search_action.submitted) await pause(1200);
     } else if (options.query) result.search_action = { submitted: true, method: 'browser_search_url', query: options.query };
-    const resolvedURL = validateURL(await page.evaluate('location.href')).href;
+    const resolvedURL = validateURL(await operations.evaluate('location.href')).href;
     result.resolved_url = sourceURL(resolvedURL);
     result.platform = platformOf(resolvedURL);
-    for (let attempt = 0; attempt < 10; attempt++) {
-      const snapshot = await page.evaluate(expression(extractPage, { platform: result.platform, requestedURL: url, comments: Boolean(options.comments), includePresentation: false, isSearch: Boolean(options.query) }));
-      if (snapshot.post && !result.post) result.post = snapshot.post;
-      if (snapshot.gate || (snapshot.target_present && snapshot.text.length > 80)) break;
-      await pause(600);
-    }
+    operations.url = resolvedURL;
+    const ready = await operations.policy.waitUntil(resolvedURL,
+      () => operations.evaluate(extractPage, { platform: result.platform, requestedURL: url, comments: Boolean(options.comments), includePresentation: false, isSearch: Boolean(options.query) }),
+      snapshot => snapshot?.target_present && Boolean(snapshot.text?.trim() || snapshot.post?.content_present));
+    const initial = ready.last;
+    if (initial?.post && !result.post) result.post = initial.post;
     for (let round = 0; round <= budget; round++) {
       if (networkCapture && round < 3) {
         try {
-          const network = await page.readNetworkCapture();
+          const network = await operations.readResponses();
           articleMedia = { ...articleMedia, ...articleMediaFromNetwork(network, url.match(/\/status\/(\d+)/)?.[1]) };
           observedVideos = observedPostVideos(network, url.match(/\/status\/(\d+)/)?.[1]);
         }
         catch (error) { networkCapture = false; console.error(`[luz-crawl] Response capture unavailable: ${error.message}`); }
       }
-      const expanded = await page.evaluate(expression(expandPage, { platform: result.platform, comments: Boolean(options.comments) }));
+      const expanded = initial?.gate ? [] : await operations.evaluate(expandPage, { platform: result.platform, comments: Boolean(options.comments) }, { idempotent: false, label: 'expand_visible_content_once' });
       if (expanded.length) { result.expansions.push(...expanded); await pause(600); }
-      const snapshot = await page.evaluate(expression(extractPage, { platform: result.platform, requestedURL: url, comments: Boolean(options.comments), articleMedia, observedVideos, isSearch: Boolean(options.query) }));
+      const snapshot = await operations.extract({ platform: result.platform, requestedURL: url, comments: Boolean(options.comments), articleMedia, observedVideos, isSearch: Boolean(options.query), includePresentation: true });
       if (!snapshot || typeof snapshot.text !== 'string' || !Array.isArray(snapshot.items)) throw new Error('Browser Bridge returned an invalid extraction envelope.');
-      snapshot.scroll = await page.evaluate(expression(scrollPage, { move: false, comments: Boolean(options.comments), platform: result.platform }));
+      if (!snapshot.scroll || typeof snapshot.scroll.at_bottom !== 'boolean') throw new OperationError('invalid_response', 'Extraction is missing its scroll position.');
       lastSnapshot = snapshot;
       result.login_notice = snapshot.login_notice;
       if (snapshot.post) {
@@ -108,7 +112,7 @@ export async function capture(page, options) {
       stable = signature === fingerprint && snapshot.scroll.at_bottom && !snapshot.loading && !waitingComments ? stable + 1 : 0;
       fingerprint = signature;
       console.error(`[luz-crawl] Snapshot ${index}: ${snapshot.text.length} chars, ${result.items.length} items, stable=${stable}`);
-      if (snapshot.gate) { result.stop_reason = snapshot.gate; break; }
+      if (snapshot.gate) { result.stop_reason = snapshot.gate; if (snapshot.gate === 'rate_limited') await operations.policy.noteFailure(resolvedURL, new OperationError('rate_limited', 'Page rate limit observed.')); break; }
       const article = snapshot.presentation;
       if (!options.comments && article?.ready && !article.media_pending) {
         const current = hash(JSON.stringify([article.text_chars, snapshot.items.filter((item) => item.kind === 'article').map((item) => item.text), article.assets]));
@@ -119,7 +123,7 @@ export async function capture(page, options) {
       if (round === budget) break;
       // A complete X Article is already in the DOM; let deferred assets settle before scrolling.
       if (!options.comments && article?.ready && (round < 2 || !article.media_pending)) { await pause(350); continue; }
-      await page.evaluate(expression(scrollPage, { comments: Boolean(options.comments), platform: result.platform }));
+      await operations.evaluate(scrollPage, { comments: Boolean(options.comments), platform: result.platform }, { idempotent: false, label: 'scroll_content_once' });
       scrollRounds++;
       await pause(Number(options.delay ?? (waitingComments ? 750 : 350)));
     }
@@ -151,7 +155,7 @@ export async function capture(page, options) {
       for (const link of candidates.slice(0, 2)) {
         if (canonicalURL(link.url) === canonicalURL(url)) continue;
         try {
-          const related = await capture(page, { ...options, url: link.url, out: path.join(run.folder, 'raw', 'related'), related: true });
+          const related = await capture(page, { ...options, url: link.url, out: path.join(run.folder, 'raw', 'related'), related: true }, operations);
           result.related.push({ url: link.url, folder: related.folder, html_file: related.html_file, status: related.status });
           const relatedManifest = path.join(related.folder, 'raw', 'manifest.json');
           const relatedFiles = JSON.parse(await fs.readFile(relatedManifest, 'utf8')).files;
@@ -182,22 +186,26 @@ export async function capture(page, options) {
     if (unresolvedMedia) { result.status = 'partial'; result.limitations.push(`${unresolvedMedia} 个媒体查看链接已保留，页面只加载了占位区域，媒体文件地址尚未解析`); }
     if (options.screenshot !== false) {
       try {
-        if (result.related.length) await page.goto(url);
-        try { await page.screenshot({ path: file('raw/page.png'), fullPage: true }); result.screenshot_scope = 'full_page'; }
-        catch { await page.screenshot({ path: file('raw/page.png'), fullPage: false }); result.screenshot_scope = 'viewport'; result.limitations.push('整页截图超出浏览器能力，已保存当前视口截图'); }
+        if (result.related.length) await operations.navigate(url);
+        try { await operations.screenshot(file('raw/page.png'), true); result.screenshot_scope = 'full_page'; }
+        catch { await operations.screenshot(file('raw/page.png'), false, 1); result.screenshot_scope = 'viewport'; result.limitations.push('整页截图超出浏览器能力，已保存当前视口截图'); }
         const bytes = await fs.readFile(file('raw/page.png')); files.push({ path: 'raw/page.png', sha256: hash(bytes), bytes: bytes.length });
       }
       catch (error) { result.limitations.push(`截图失败：${error.message}`); }
     }
   } catch (error) {
-    result.status = 'failed'; result.stop_reason = 'transport_or_archive_error'; result.error = error.message; result.limitations.push(error.message);
+    const failure = classifyFailure(error);
+    result.status = result.snapshots.length ? 'partial' : 'failed'; result.stop_reason = failure.code; result.error = failure.message; result.failure = failure.toJSON(); result.limitations.push(failure.message);
+    result.url_check ||= { requested: sourceURL(url), resolved: result.resolved_url, target_confirmed: firstTarget, valid_content: firstTarget && !['login_required', 'verification_required', 'rate_limited', 'access_denied'].includes(failure.code) };
   }
   try {
+    result.execution = operations.summary(); result.browser_profile = operations.policy.profile;
     result.primary_file = await nameRun(run, result.title || new URL(url).hostname);
     if (run.rename_warning && !result.limitations.includes(run.rename_warning)) result.limitations.push(run.rename_warning);
     result.related = uniq(result.related, (item) => item.url);
     result.completeness = { scope: options.query ? 'search_candidates' : result.presentation?.kind === 'x_article' ? 'target_article_dom_and_already_loaded_replies' : result.platform === 'x' ? 'target_post_and_loaded_same_author_thread' : 'rendered_body_and_loaded_items', all_site_content: false, target_present: firstTarget, scroll_bottom: Boolean(lastSnapshot?.scroll?.at_bottom), snapshots: result.snapshots.length, scroll_rounds: scrollRounds, items: result.items.length, chars: result.items.filter((item) => item.kind !== 'page_shell').reduce((sum, item) => sum + (item.text?.length || 0), 0), media: result.media.length, media_assets: result.media.filter((item) => item.kind !== 'media_viewer').length, media_viewers_unresolved: result.media.filter((item) => item.kind === 'media_viewer' && !item.asset_url).length, stop_reason: result.stop_reason, budget };
-    const html = await htmlDocument(result);
+    const html = await htmlDocument(result, options.fetchAsset, { executionPolicy: operations.policy });
+    result.execution = operations.summary();
     result.elapsed_ms = Date.now() - started;
     // Keep the previous readable export as historical evidence during a format migration.
     for (const old of ['content.md', priorContent?.primary_file].filter((name) => name && name !== result.primary_file)) {
@@ -221,6 +229,6 @@ export async function capture(page, options) {
     await recordReference(run, result);
     try { await recordExperience({ platform: result.platform, extractor_version: EXTRACTOR_VERSION, canonical_url: result.canonical_url, requested_url: result.requested_url, validated_url: result.url_check?.valid_content ? result.resolved_url : undefined, entry_method: result.url_check?.entry_method, query: result.query, status: result.status, stop_reason: result.stop_reason, chars: result.completeness.chars, folder: run.folder, lesson: result.limitations.join('; '), route: result.route }); }
     catch (error) { console.error(`[luz-crawl] Experience save failed: ${error.message}`); }
-    return { folder: run.folder, html_file: htmlFile, status: result.status, stop_reason: result.stop_reason, browser_opened: result.browser_opened, resolved_url: result.resolved_url, url_check: result.url_check, elapsed_ms: result.elapsed_ms, offline: result.offline, search_action: result.search_action, login_notice: result.login_notice, completeness: result.completeness, post: result.post || null, comments: result.comments || [], comments_coverage: result.comments_coverage, limitations: result.limitations, ...(result.error ? { error: result.error } : {}) };
+    return { folder: run.folder, html_file: htmlFile, status: result.status, stop_reason: result.stop_reason, browser_opened: result.browser_opened, resolved_url: result.resolved_url, url_check: result.url_check, elapsed_ms: result.elapsed_ms, offline: result.offline, search_action: result.search_action, login_notice: result.login_notice, completeness: result.completeness, post: result.post || null, comments: result.comments || [], comments_coverage: result.comments_coverage, limitations: result.limitations, execution: result.execution, ...(result.error ? { error: result.error, failure: result.failure } : {}) };
   } finally { await run.release(); }
 }

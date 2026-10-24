@@ -1981,6 +1981,8 @@ async function handleExec(cmd, leaseKey) {
     const data = await evaluateAsync(tabId, cmd.code, aggressive, commandCdpTimeoutMs(cmd));
     return pageScopedResult(cmd.id, tabId, data);
   } catch (err) {
+    // A write may have applied before navigation invalidated its execution context.
+    if (cmd.code.startsWith("/*luzcrawl:once*/")) return { id: cmd.id, ok: false, errorCode: "command_result_unknown", error: "LuzCrawl write result is unknown; inspect the page before continuing.", errorHint: `${err instanceof Error ? err.message : String(err)}. ${UNKNOWN_OUTCOME_HINT}` };
     return errorResult(cmd.id, err);
   }
 }

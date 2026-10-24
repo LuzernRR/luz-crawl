@@ -1,15 +1,15 @@
 <p align="center"><img src="assets/logo.png" width="180" alt="LuzCrawl"></p>
 <h1 align="center">LuzCrawl</h1>
-<p align="center">给一个链接或主题，得到一份含图文与视频的 HTML<br><sub>v2.4.0 · Edge / Chrome · Skill + 扩展 + 本地记忆</sub></p>
-<p align="center"><a href="https://github.com/LuzernRR/luz-crawl/releases/tag/v2.4.0">下载</a> · <a href="#安装">安装</a> · <a href="#使用">使用</a> · <a href="#保存目录">保存目录</a> · <a href="#可用网站">可用网站</a></p>
+<p align="center">给一个链接或主题，得到一份含图文与视频的 HTML<br><sub>v2.5.0 · Edge / Chrome · Skill + 扩展 + 本地记忆</sub></p>
+<p align="center"><a href="https://github.com/LuzernRR/luz-crawl/releases/tag/v2.5.0">下载</a> · <a href="#安装">安装</a> · <a href="#使用">使用</a> · <a href="#保存目录">保存目录</a> · <a href="#可用网站">可用网站</a></p>
 <p align="center"><img src="assets/readme-workflow.svg" width="720" alt="浏览器搜索 → 原文采集 → 归档与记忆"></p>
 
 ## 安装
 
-**1. 下载完整 Skill，放入 Agent 的技能目录。** [下载 ZIP](https://github.com/LuzernRR/luz-crawl/releases/download/v2.4.0/luz-crawl-skill.zip)，或在 Windows PowerShell 运行：
+**1. 下载完整 Skill，放入 Agent 的技能目录。** [下载 ZIP](https://github.com/LuzernRR/luz-crawl/releases/download/v2.5.0/luz-crawl-skill.zip)，或在 Windows PowerShell 运行：
 
 ```powershell
-Invoke-WebRequest "https://github.com/LuzernRR/luz-crawl/releases/download/v2.4.0/luz-crawl-skill.zip" -OutFile luz-crawl-skill.zip
+Invoke-WebRequest "https://github.com/LuzernRR/luz-crawl/releases/download/v2.5.0/luz-crawl-skill.zip" -OutFile luz-crawl-skill.zip
 Expand-Archive luz-crawl-skill.zip -DestinationPath "$env:USERPROFILE\.codex\skills"
 cd "$env:USERPROFILE\.codex\skills\luz-crawl"
 npm install -g @jackwener/opencli@1.8.8
@@ -122,13 +122,15 @@ luz-crawl/
 
 ## 浏览器接口
 
-将 `read / scroll / screenshot` 动作保存为 `actions.json`，运行：
+支持定位、阅读、滚动、表单、点击、提交、条件等待、提取和截图。将动作保存为 `actions.json`，运行：
 
 ```powershell
 node scripts/luz-crawl.mjs browser "https://example.com" --file actions.json
+node scripts/luz-crawl.mjs schema
+node scripts/luz-crawl.mjs policy
 ```
 
-最多 20 步。`click / type` 需唯一可见选择器、明确用户授权与 `--allow-write`；点击后用 `read` 核验。真实点赞 / 发送尚未验收，密码由用户手动输入。接口示例见 [使用指南](skills/luz-crawl/references/install.md#浏览器动作)。
+最多 20 步。`click / type / form / submit` 需明确用户授权与 `--allow-write`，用 expect 核验效果；结果未知时不自动重放。读取有限退避重试，平台节流与冷却跨调用保存，429 后停止访问。真实点赞 / 发送尚未验收。[动作、JSON Schema 与策略配置](skills/luz-crawl/references/browser-api.md)
 
 ## 开发与许可
 

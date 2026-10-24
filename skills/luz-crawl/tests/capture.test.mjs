@@ -9,6 +9,7 @@ import { verifyArchive, hash, mergeItems, recordExperience, findExperience, matc
 import { htmlDocument } from '../opencli/lib/html.mjs';
 import { articleMediaFromNetwork } from '../opencli/lib/extract-page.mjs';
 import { search, sourceCandidates } from '../opencli/lib/search.mjs';
+import { testPolicy } from './helpers.mjs';
 
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'luz-crawl-test-'));
 process.env.LUZ_CRAWL_STATE = path.join(tmp, 'state');
@@ -16,7 +17,7 @@ test.after(async () => { await fs.rm(tmp, { recursive: true, force: true }); });
 
 function snapshot(overrides = {}) {
   const body = 'This is the real page body, with enough content to distinguish it from an empty loading placeholder. '.repeat(3);
-  return { url: 'https://x.com/a/status/123', title: 'Test source', text: body, html: `<article>${body}</article>`, presentation: { html: `<article>${body}</article>`, text_chars: body.length, assets: [], width: 598 }, items: [{ id: '123', url: 'https://x.com/a/status/123', author: 'a', kind: 'target_post', text: body }], media: [], links: [], transcript: [], article_links: [], target_present: true, gate: null, scroll: { height: 1500 }, ...overrides };
+  return { url: 'https://x.com/a/status/123', title: 'Test source', text: body, html: `<article>${body}</article>`, presentation: { html: `<article>${body}</article>`, text_chars: body.length, assets: [], width: 598 }, items: [{ id: '123', url: 'https://x.com/a/status/123', author: 'a', kind: 'target_post', text: body }], media: [], links: [], transcript: [], article_links: [], target_present: true, gate: null, scroll: { at_bottom: true, height: 1500 }, ...overrides };
 }
 function page(snapshots) {
   let index = 0;
@@ -28,7 +29,7 @@ function page(snapshots) {
     throw new Error('Unexpected browser operation');
   } };
 }
-const opts = (out, more = {}) => ({ url: 'https://x.com/a/status/123', out: path.join(tmp, out), delay: 0, scrolls: 5, screenshot: false, ...more });
+const opts = (out, more = {}) => ({ url: 'https://x.com/a/status/123', out: path.join(tmp, out), executionPolicy: testPolicy(tmp), delay: 0, scrolls: 5, screenshot: false, ...more });
 
 test('URL validation, aliases and ID deduplication', () => {
   for (const url of ['file:///secret', 'javascript:alert(1)', 'https://user:password@example.com']) assert.throws(() => validateURL(url));
@@ -74,7 +75,7 @@ test('error-page recommendation links are rejected before trying a public search
     evaluate: async (code) => {
       if (code === 'location.href') return url;
       if (code.includes('function expandPage')) return [];
-      if (code.includes('function scrollPage')) return { at_bottom: true, height: 1500, top: 500, viewport: 1000 };
+      if (code.includes('function scrollPage') && !code.includes('function extractPage')) return { at_bottom: true, height: 1500, top: 500, viewport: 1000 };
       if (code.includes('function extractPage')) {
         const failed = !url.includes('bing.com');
         return snapshot({ url, title: failed ? '404页面' : 'Actual search results', gate: failed ? 'unavailable' : null, links: [{ url: 'https://www.xiaohongshu.com/explore/abc123' }] });
@@ -180,7 +181,7 @@ test('X article links survive virtualization; child evidence is included in veri
   const browser = { goto: async (url) => { currentURL = url; reads = 0; }, evaluate: async (code) => {
     if (code === 'location.href') return currentURL;
     if (code.includes('function expandPage')) return [];
-    if (code.includes('function scrollPage')) return { at_bottom: true, height: 1500, top: 500, viewport: 1000 };
+    if (code.includes('function scrollPage') && !code.includes('function extractPage')) return { at_bottom: true, height: 1500, top: 500, viewport: 1000 };
     if (currentURL === articleURL) return snapshot({ url: articleURL, items: [{ id: 'article:789', kind: 'article', text: 'Article full text', url: articleURL }] });
     return snapshot({ article_links: reads++ < 2 ? [articleURL] : [] });
   } };
@@ -216,7 +217,11 @@ test('X Article body tied to the target permalink is substantive even when tweet
 test('unchanged text above page bottom cannot stop lazy-loading capture early', async () => {
   const browser = page([snapshot()]);
   const evaluate = browser.evaluate;
-  browser.evaluate = async (code) => code.includes('function scrollPage') ? { at_bottom: false, top: 200, viewport: 800, height: 20000 } : evaluate(code);
+  browser.evaluate = async (code) => {
+    const value = await evaluate(code);
+    if (code.includes('function extractPage')) value.scroll = { at_bottom: false, top: 200, viewport: 800, height: 20000 };
+    return value;
+  };
   const result = await capture(browser, opts('not-bottom'));
   assert.equal(result.status, 'partial');
   assert.equal(result.stop_reason, 'scroll_budget');
@@ -285,14 +290,28 @@ test('a verified complete X Article exports directly without scrolling through r
 
 test('offline HTML embeds observed resources and reports resource failures honestly', async () => {
   const result = { platform: 'x', title: '<script>title</script>', status: 'captured', requested_url: 'https://x.com/a/status/1', items: [], limitations: [], presentation: { html: '<p>first</p><img src="https://pbs.twimg.com/a?x=1&amp;y=2"><p>last</p>', assets: [{ kind: 'image', url: 'https://pbs.twimg.com/a?x=1&y=2' }] } };
-  const html = await htmlDocument(result, async () => new Response('png-bytes', { headers: { 'content-type': 'image/png' } }));
+  const html = await htmlDocument(result, async () => new Response('png-bytes', { headers: { 'content-type': 'image/png' } }), { executionPolicy: testPolicy(tmp) });
   assert.equal(result.offline.embedded, 1);
   assert.match(html, /<p>first<\/p><img src="data:image\/png;base64,[^"]+"><p>last<\/p>/);
   assert.match(html, /&lt;script&gt;title/);
   const failed = structuredClone(result); failed.status = 'captured';
-  await htmlDocument(failed, async () => new Response('denied', { status: 403 }));
+  await htmlDocument(failed, async () => new Response('denied', { status: 403 }), { executionPolicy: testPolicy(tmp) });
   assert.equal(failed.status, 'partial');
   assert.equal(failed.offline.failures[0].error, 'HTTP 403');
+});
+
+test('a rate-limited native search stops before public fallback routes', async () => {
+  const browser = page([snapshot({ gate: 'rate_limited' })]);
+  const result = await search(browser, opts('limited-search', { platform: 'xhs', query: '人工智能', read: 0, scrolls: 0 }));
+  assert.equal(result.stop_reason, 'rate_limited'); assert.equal(result.attempts.length, 1); assert.equal(browser.opened.length, 1);
+  assert.equal(result.discovered_candidates, 0);
+});
+
+test('HTML resource embedding stops on 429 and preserves missing asset evidence', async () => {
+  let requests = 0;
+  const result = { platform: 'x', title: 'test', requested_url: 'https://x.com/a/status/1', status: 'captured', items: [], limitations: [], presentation: { html: '<p>原文</p>', assets: [{ kind: 'image', url: 'https://example.com/one' }, { kind: 'image', url: 'https://example.com/two' }] } };
+  await htmlDocument(result, async () => { requests++; return new Response('', { status: 429 }); }, { executionPolicy: testPolicy(tmp) });
+  assert.equal(requests, 1); assert.equal(result.status, 'partial'); assert.equal(result.offline.failures.length, 2);
 });
 
 test('observed Article response media is limited to the target post and official image host', () => {

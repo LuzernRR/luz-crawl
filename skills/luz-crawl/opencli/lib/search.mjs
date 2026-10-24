@@ -5,6 +5,8 @@ import { clickSearchResult } from './extract-page.mjs';
 import { resolveSite } from './memory.mjs';
 import { canonicalURL, decodedLink, validateURL, sourceURL } from './platforms.mjs';
 import { atomicWrite, recordExperience } from './archive.mjs';
+import { createBrowserOperations } from './browser-operations.mjs';
+import { VERSION } from './version.mjs';
 
 export function sourceCandidates(content, site, external = false) {
   const seen = new Set();
@@ -33,10 +35,11 @@ export function publicSourceAlternate(url) {
   return null;
 }
 
-export async function search(page, kwargs) {
+export async function search(page, kwargs, sharedOperations) {
   const count = Number(kwargs.read || 0);
   if (!Number.isInteger(count) || count < 0 || count > 20) throw new Error('--read must be 0-20.');
   if (!kwargs.query?.trim()) throw new Error('A non-empty search query is required.');
+  const operations = sharedOperations || await createBrowserOperations(page, kwargs);
   const site = await resolveSite(kwargs.platform, kwargs.query, kwargs.site);
   const query = site.query;
   const routes = [{ kind: 'native', url: site.search?.replaceAll('{query}', encodeURIComponent(query)) || site.url, form: site.mode ? { mode: site.mode, parameter: site.parameter, entry_url: site.form_url } : undefined }];
@@ -50,7 +53,7 @@ export async function search(page, kwargs) {
   for (const route of routes.slice(0, 3)) {
     console.error(`[LuzCrawl] ${site.name}: ${route.kind} browser search`);
     let current;
-    try { current = await capture(page, { ...kwargs, resume: true, url: route.url, query, search_platform: site.id, search_form: route.form }); }
+    try { current = await capture(page, { ...kwargs, resume: true, url: route.url, query, search_platform: site.id, search_form: route.form }, operations); }
     catch (error) { attempts.push({ route_kind: route.kind, url: sourceURL(route.url), status: 'failed', error: error.message, search_performed: false, candidates: 0 }); continue; }
     const content = JSON.parse(await fs.readFile(path.join(current.folder, 'raw/content.json'), 'utf8'));
     const performed = Boolean(current.search_action?.submitted);
@@ -59,8 +62,9 @@ export async function search(page, kwargs) {
     if (route.kind !== 'public_index' && gate) nativeGate ||= { reason: gate, url: route.url };
     const found = performed && !gate && current.url_check?.valid_content ? sourceCandidates(content, site, site.external_results && !kwargs.site) : [];
     attempts.push({ route_kind: route.kind, url: sourceURL(route.url), resolved_url: current.resolved_url, url_check: current.url_check, search_performed: performed, status: current.status, gate, candidates: found.length, folder: current.folder, html_file: current.html_file, stop_reason: current.stop_reason });
-    await recordExperience({ platform: site.id, extractor_version: '2.3.0', canonical_url: canonicalURL(route.url), query: kwargs.query, status: gate ? 'awaiting_user' : current.status, stop_reason: gate || current.stop_reason, route_kind: route.kind, search_performed: performed, valid_content: Boolean(current.url_check?.valid_content), resolved_url: current.resolved_url, candidates: found.length, lesson: current.limitations.join('; ') });
+    await recordExperience({ platform: site.id, extractor_version: VERSION, canonical_url: canonicalURL(route.url), query: kwargs.query, status: gate ? 'awaiting_user' : current.status, stop_reason: gate || current.stop_reason, route_kind: route.kind, search_performed: performed, valid_content: Boolean(current.url_check?.valid_content), resolved_url: current.resolved_url, candidates: found.length, lesson: current.limitations.join('; ') });
     discovery = { ...current, search_url: sourceURL(route.url), route_kind: route.kind };
+    if (['rate_limited', 'operation_budget', 'cancelled'].includes(current.stop_reason)) break;
     if (found.length) { candidates = found; break; }
   }
   const sources = [];
@@ -69,27 +73,27 @@ export async function search(page, kwargs) {
   for (const [index, link] of candidates.slice(0, count).entries()) {
     let currentPage = false;
     if (site.id === 'xhs' && discovery.route_kind === 'native') {
-      await page.goto(discovery.search_url);
-      for (let attempt = 0; attempt < 10 && !currentPage; attempt++) {
-        currentPage = await page.evaluate(`(${clickSearchResult.toString()})(${JSON.stringify({ url: link.url })})`);
-        if (!currentPage) await new Promise((resolve) => setTimeout(resolve, 500));
-      }
+      await operations.navigate(discovery.search_url);
+      const ready = await operations.policy.waitUntil(operations.url,
+        () => operations.evaluate(clickSearchResult, { url: link.url, inspect: true }), value => Boolean(value), { timeout_ms: 5000 });
+      if (ready.satisfied) currentPage = await operations.evaluate(clickSearchResult, { url: link.url }, { idempotent: false, label: 'open_search_result_once' });
     }
     const alternate = publicSourceAlternate(link.url);
     const learned = alternate && site.source_corrections.some((event) => event.source_host === new URL(link.url).hostname && event.verified_host === new URL(alternate).hostname);
-    let source = await capture(page, { ...kwargs, resume: true, query: '', search_form: undefined, current_page: currentPage, url: learned ? alternate : link.url });
-    if (alternate && !learned && !source.url_check?.valid_content && source.stop_reason !== 'verification_required' && (source.stop_reason !== 'login_required' || new URL(link.url).hostname === 'apps.weibo.com')) {
+    let source = await capture(page, { ...kwargs, resume: true, query: '', search_form: undefined, current_page: currentPage, url: learned ? alternate : link.url }, operations);
+    if (alternate && !learned && !source.url_check?.valid_content && !['verification_required', 'rate_limited', 'operation_budget', 'cancelled'].includes(source.stop_reason) && (source.stop_reason !== 'login_required' || new URL(link.url).hostname === 'apps.weibo.com')) {
       const original = source;
-      source = await capture(page, { ...kwargs, resume: true, query: '', search_form: undefined, url: alternate });
+      source = await capture(page, { ...kwargs, resume: true, query: '', search_form: undefined, url: alternate }, operations);
       source.url_correction = { original: sourceURL(link.url), alternate, original_status: original.status, original_reason: original.stop_reason, validated: Boolean(source.url_check?.valid_content) };
-      await recordExperience({ platform: site.id, extractor_version: '2.3.0', canonical_url: canonicalURL(link.url), status: source.status, stop_reason: source.stop_reason, route_kind: 'source_url_correction', source_host: new URL(link.url).hostname, verified_host: new URL(alternate).hostname, validated_url: source.url_check?.valid_content ? source.resolved_url : undefined, lesson: `${source.url_check?.valid_content ? 'Verified' : 'Unverified'} public page for the same content ID: ${sourceURL(alternate)}` });
+      await recordExperience({ platform: site.id, extractor_version: VERSION, canonical_url: canonicalURL(link.url), status: source.status, stop_reason: source.stop_reason, route_kind: 'source_url_correction', source_host: new URL(link.url).hostname, verified_host: new URL(alternate).hostname, validated_url: source.url_check?.valid_content ? source.resolved_url : undefined, lesson: `${source.url_check?.valid_content ? 'Verified' : 'Unverified'} public page for the same content ID: ${sourceURL(alternate)}` });
     }
     sources.push({ url: sourceURL(link.url), ...source });
+    if (['rate_limited', 'operation_budget', 'cancelled'].includes(source.stop_reason)) break;
     if (['login_required', 'verification_required'].includes(source.stop_reason)) { awaiting = { reason: source.stop_reason, url: source.url_correction?.alternate || link.url }; break; }
   }
-  if (!candidates.length && nativeGate) { awaiting = nativeGate; await page.goto(nativeGate.url); }
+  if (!candidates.length && nativeGate && !['rate_limited', 'operation_budget', 'cancelled'].includes(discovery.stop_reason)) { awaiting = nativeGate; await operations.navigate(nativeGate.url); }
   const result = { ...discovery, platform: site.id, platform_name: site.name, query: kwargs.query, scope: 'search_candidates_and_opened_sources', search_performed: attempts.some((item) => item.search_performed), search_status: candidates.length ? 'candidates_found' : awaiting ? 'awaiting_user' : 'no_verified_candidates', discovery_status: discovery.status, status: awaiting ? 'awaiting_user' : !candidates.length || sources.length < count || sources.some((item) => item.status !== 'captured') ? 'partial' : discovery.status, attempts, discovered_candidates: candidates.length, candidates: candidates.slice(0, 100), requested_sources: count, opened_sources: sources.length, verified_sources: sources.filter((item) => item.status === 'captured').length, sources, suggested_queries: site.suggested_queries, preferred_keywords: site.preferred_keywords, ...(awaiting ? { requires_user: true, awaiting_reason: awaiting.reason, handover_url: sourceURL(awaiting.url) } : {}) };
   const indexFile = path.resolve(kwargs.out, 'raw', `search-${path.basename(discovery.folder)}.json`);
   await atomicWrite(indexFile, result);
-  return { ...result, search_index: indexFile };
+  return { ...result, search_index: indexFile, execution: operations.summary() };
 }

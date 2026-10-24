@@ -227,7 +227,7 @@ export function extractPage({ platform, requestedURL, comments = false, includeP
     if (platform === 'bilibili' && loadedTarget) imageSources = [{ url: loadedTarget.pic, alt: loadedTarget.title, source: 'observed_video_cover' }];
     if (platform === 'xhs' && loadedTarget?.imageList?.length) imageSources = loadedTarget.imageList.map(image => ({url:image.urlDefault || image.urlPre,alt:loadedTarget.title,source:'observed_target_page_data'}));
     if (platform === 'tiktok' && loadedTarget) imageSources = loadedTarget.imagePost?.images?.map(image => ({url:image.imageURL?.urlList?.[0] || '',alt:loadedTarget.desc})) || [{url:loadedTarget.video?.cover || loadedTarget.video?.originCover || '',alt:loadedTarget.desc,source:'observed_video_cover'}];
-    const images = (imageSources || (platform === 'youtube' ? [{ url: document.querySelector('meta[property="og:image"]')?.content || '', alt: document.title, source: 'observed_video_cover' }] : [...mediaRoot.querySelectorAll('img')].filter((node) => !node.closest('[data-testid*="UserAvatar"], [slot="credit-bar"], .avatar, .author, .comment-item, .comments-list, .topic-reply, .reply-item')).map((node) => ({ url: node.currentSrc || node.src || node.dataset.src || '', alt: node.alt || '' })))).filter((item) => /^https?:\/\//.test(item.url || '') && !(platform === 'xhs' && /^https?:\/\/sns-avatar[^/]*\.xhscdn\.com\/avatar\//.test(item.url)) && !(platform === 'douban' && /^https?:\/\/[^/]*doubanio\.com\/icon\/up/.test(item.url))).map(item => ({...item,url:item.url.replace(/^http:/,'https:')}));
+    const images = (imageSources || (platform === 'youtube' ? [{ url: document.querySelector('meta[property="og:image"]')?.content || '', alt: document.title, source: 'observed_video_cover' }] : [...mediaRoot.querySelectorAll('img')].filter((node) => !node.closest('[data-testid*="UserAvatar"], [slot="credit-bar"], .avatar, .author, .comment-item, .comments-list, .topic-reply, .reply-item')).map((node) => ({ url: node.currentSrc || node.src || node.dataset.src || '', alt: node.alt || '' })))).filter((item) => /^https?:\/\//.test(item.url || '') && !(platform === 'xhs' && /^https?:\/\/sns-avatar[^/]*\.xhscdn\.com\/avatar\//.test(item.url)) && !(platform === 'douban' && /^https?:\/\/[^/]*doubanio\.com\/icon\/up/.test(item.url))).map(item => ({...item,url:/^http:\/\/[^/]+\.xhscdn\.com\//.test(item.url) ? item.url.replace(/^http:/,'https:') : item.url}));
     for (const item of Object.values(articleMedia)) if (!images.some((image) => image.url === item.url)) images.push({ url: item.url, alt: item.alt || '', source: 'observed_article_response' });
     const videos = [...(platform === 'douyin' ? postRoot : mediaRoot).querySelectorAll('video')].map((node) => ({ url: node.currentSrc || node.src || node.querySelector('source')?.src || '', poster: node.poster || '', direct: /^https?:\/\//.test(node.currentSrc || node.src || node.querySelector('source')?.src || '') })).filter(item => /^(https?:\/\/|blob:)/.test(item.url));
     let targetVideo;
@@ -358,27 +358,26 @@ export function expandPage({ platform, comments = false }) {
     zhihu: ['.RichContent-expandButton'],
     douban: ['.unfold'],
   };
-  const clicked = [];
   for (const dialog of document.querySelectorAll('[role="dialog"], .login-container, .login-modal, [class*="loginModal"], [class*="LoginModal"]')) {
     if (!dialog.getClientRects().length || !/登录|sign in|log in/i.test(dialog.innerText || '')) continue;
     const close = [...dialog.querySelectorAll('button, [role="button"], [aria-label]')].find((node) => node.getClientRects().length && /^(关闭|稍后|暂不登录|以后再说|游客访问|Close|Not now|×)$/i.test((node.getAttribute('aria-label') || node.innerText || '').trim()));
-    if (close) { close.click(); clicked.push('dismiss_optional_login'); }
+    if (close) { close.click(); return ['dismiss_optional_login']; }
   }
   for (const selector of selectors[platform] || []) for (const item of document.querySelectorAll(selector)) {
     if (item.getClientRects().length && !item.disabled && item.dataset.luzExpanded !== 'yes') {
-      item.dataset.luzExpanded = 'yes'; item.click(); clicked.push(selector);
+      item.dataset.luzExpanded = 'yes'; item.click(); return [selector];
     }
   }
   if (comments && platform === 'reddit') for (const item of document.querySelectorAll('shreddit-comment-tree button')) {
-    if (/^(view more comments|load more comments|more replies|更多回复)$/i.test(item.innerText.trim()) && item.getClientRects().length) { item.click(); clicked.push('more_comments'); }
+    if (/^(view more comments|load more comments|more replies|更多回复)$/i.test(item.innerText.trim()) && item.getClientRects().length) { item.click(); return ['more_comments']; }
   }
   if (comments && ['zhihu', 'douyin'].includes(platform)) {
     const scope = platform === 'zhihu' ? document.querySelector('.AnswerCard') || document : document;
     const openList = platform === 'douyin' && [...scope.querySelectorAll('[data-e2e="comment-list"]')].some(node => node.getClientRects().length);
     const item = !openList && [...scope.querySelectorAll(platform === 'zhihu' ? 'button.ContentItem-action' : '[data-e2e="video-player-comment"], [data-e2e="feed-comment-icon"]')].find((node) => node.getClientRects().length && node.dataset.luzComments !== 'yes' && (platform !== 'zhihu' || /评论/.test(node.innerText || node.getAttribute('aria-label') || '')));
-    if (item) { item.dataset.luzComments = 'yes'; item.click(); clicked.push('open_comments'); }
+    if (item) { item.dataset.luzComments = 'yes'; item.click(); return ['open_comments']; }
   }
-  return clicked;
+  return [];
 }
 
 export function scrollPage({ move = true, comments = false, platform } = {}) {
@@ -418,7 +417,7 @@ export function submitSearch({ query, mode, url, parameter = 'keywords' }) {
 }
 
 
-export function clickSearchResult({ url }) {
+export function clickSearchResult({ url, inspect = false }) {
   const target = new URL(url);
   const noteID = (path) => path.match(/\/(?:explore|discovery\/item|search_result)\/([^/?]+)/)?.[1];
   const id = noteID(target.pathname);
@@ -427,5 +426,6 @@ export function clickSearchResult({ url }) {
     return item.getClientRects().length && candidate.origin === target.origin && (candidate.pathname === target.pathname || (id && noteID(candidate.pathname) === id));
   });
   if (!link) return false;
+  if (inspect) return true;
   link.target = '_self'; link.click(); return true;
 }

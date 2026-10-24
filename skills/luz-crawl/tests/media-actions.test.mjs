@@ -5,13 +5,15 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { hash, atomicWrite, verifyArchive } from '../opencli/lib/archive.mjs';
-import { downloadArchive } from '../opencli/lib/download.mjs';
+import { downloadArchive as download } from '../opencli/lib/download.mjs';
 import { privateAddress, validateMediaURL, fetchMedia } from '../opencli/lib/media.mjs';
 import { observedPostVideos } from '../opencli/lib/extract-page.mjs';
 import { validateActions, browserActions } from '../opencli/lib/browser-actions.mjs';
 import { sourceMarkup } from '../opencli/lib/report.mjs';
+import { testPolicy, actionArgument } from './helpers.mjs';
 
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'luzcrawl-media-'));
+const downloadArchive = (folder, options) => download(folder, { executionPolicy: testPolicy(tmp), ...options });
 test.after(() => fs.rm(tmp, { recursive: true, force: true }));
 async function archive(name, post = { images: [], videos: [] }) {
   const folder = path.join(tmp, name);
@@ -111,10 +113,10 @@ test('browser interface validates every action before navigation and stops on fa
   const file = path.join(tmp, 'actions.json');
   await atomicWrite(file, [{ action: 'click', selector: '#button' }]);
   let navigations = 0;
-  const page = { goto: async () => { navigations++; }, evaluate: async (code) => { if (code.includes('node.click()')) throw new Error('Ambiguous target'); return { text: 'result' }; } };
+  const page = { goto: async () => { navigations++; }, evaluate: async () => { throw new Error('Ambiguous target'); } };
   await assert.rejects(() => browserActions(page, { file, url: 'https://example.com' }), /allow-write/);
   assert.equal(navigations, 0);
-  const result = await browserActions(page, { file, url: 'https://example.com', 'allow-write': true });
+  const result = await browserActions(page, { file, url: 'https://example.com', 'allow-write': true, executionPolicy: testPolicy(tmp) });
   assert.equal(result.status, 'failed'); assert.equal(result.results[0].error, 'Ambiguous target');
 });
 
@@ -124,8 +126,36 @@ test('DOM click dispatches once and leaves outcome verification to a subsequent 
   const file = path.join(out, 'actions.json');
   await fs.writeFile(file, JSON.stringify([{action:'click',selector:'#counter'},{action:'read',selector:'#count'}]));
   let clicks = 0;
-  const page = { goto: async () => {}, evaluate: async code => { if (code.includes('node.click()')) { clicks++; return {tag:'BUTTON',label:'Count'}; } return {text:String(clicks)}; } };
-  const result = await browserActions(page, {file,url:'https://example.com',out,'allow-write':true});
+  const page = { goto: async () => {}, evaluate: async code => { const step = actionArgument(code); if (step.action === 'click') { clicks++; return {ok:true,url:'https://example.com',result:{effect_verified:false}}; } return {ok:true,url:'https://example.com',text:String(clicks)}; } };
+  const result = await browserActions(page, {file,url:'https://example.com',out,'allow-write':true,executionPolicy:testPolicy(tmp)});
   assert.equal(clicks, 1); assert.equal(result.results[1].value.text, '1');
   assert.equal(result.results[0].value.result.effect_verified, false);
+});
+
+test('media retries transient failures, preserves failed attempts, and cleans partial files', async () => {
+  const folder = await archive('media-retry', { images: [{ url: 'https://example.com/retry' }], videos: [] });
+  let calls = 0;
+  const result = await downloadArchive(folder, { fetchAsset: async () => ++calls === 1 ? new Response('', { status: 503 }) : new Response('image', { headers: { 'content-type': 'image/png' } }) });
+  assert.equal(calls, 2); assert.equal(result.status, 'downloaded'); assert.equal(result.execution.retries, 1);
+  assert.equal(result.execution.events[0].error.code, 'transient_failure');
+  assert.ok((await verifyArchive(folder)).ok);
+  assert.equal((await fs.readdir(path.join(folder, 'raw/media'))).filter(name => name.endsWith('.part')).length, 0);
+});
+
+test('429 stops remaining media and optional helpers instead of switching download routes', async () => {
+  const folder = await archive('media-cooldown', { images: [{ url: 'https://example.com/one' }, { url: 'https://example.com/two' }], videos: [{ url: 'https://example.com/video' }] });
+  let calls = 0, helpers = 0;
+  const result = await downloadArchive(folder, { fetchAsset: async () => { calls++; return new Response('', { status: 429, headers: { 'Retry-After': '1200' } }); }, videoHelper: async () => { helpers++; return { files: [] }; } });
+  assert.equal(calls, 1); assert.equal(helpers, 0); assert.equal(result.stop_reason, 'rate_limited');
+  assert.equal(result.attempted_direct, 1); assert.equal(result.failures[0].failure.retry_after_ms, 1200000);
+  assert.ok((await verifyArchive(folder)).ok);
+});
+
+test('failed mux retains verified streams so retrying cannot silently replace them', async () => {
+  const folder = await archive('mux-failure', { images: [], videos: [{ url: 'https://example.com/video', audio_url: 'https://example.com/audio' }] });
+  const result = await downloadArchive(folder, { fetchAsset: async url => new Response('part', { headers: { 'content-type': url.endsWith('audio') ? 'audio/mp4' : 'video/mp4' } }), muxHelper: async () => { throw new Error('Optional ffmpeg is not installed.'); }, videoFallback: false });
+  assert.equal(result.status, 'partial'); assert.equal(result.retained_parts.length, 2);
+  assert.ok((await verifyArchive(folder)).ok);
+  await fs.appendFile(result.retained_parts[0].file, 'changed');
+  await assert.rejects(() => downloadArchive(folder), /verification failed/);
 });

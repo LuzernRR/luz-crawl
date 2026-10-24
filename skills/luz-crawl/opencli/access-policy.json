@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "defaults": {
+    "navigation_interval_ms": 2000,
+    "interaction_interval_ms": 350,
+    "read_interval_ms": 100,
+    "media_interval_ms": 500,
+    "jitter_ratio": 0.15,
+    "max_attempts": 2,
+    "retry_base_ms": 700,
+    "retry_max_ms": 3000,
+    "poll_interval_ms": 350,
+    "poll_max_ms": 1500,
+    "rate_limit_cooldown_ms": 600000,
+    "failure_threshold": 3,
+    "failure_cooldown_ms": 30000,
+    "request_window_ms": 600000,
+    "max_requests_per_window": 40,
+    "max_operations": 120,
+    "max_elapsed_ms": 300000,
+    "max_pacing_wait_ms": 15000
+  },
+  "platforms": {
+    "xhs": {"navigation_interval_ms": 6000, "interaction_interval_ms": 700, "media_interval_ms": 900, "max_requests_per_window": 25},
+    "x": {"navigation_interval_ms": 5000, "interaction_interval_ms": 600, "media_interval_ms": 800, "max_requests_per_window": 30},
+    "douyin": {"navigation_interval_ms": 6000, "interaction_interval_ms": 700, "media_interval_ms": 900, "max_requests_per_window": 25},
+    "tiktok": {"navigation_interval_ms": 6000, "interaction_interval_ms": 700, "media_interval_ms": 900, "max_requests_per_window": 25},
+    "zhihu": {"navigation_interval_ms": 5000, "interaction_interval_ms": 600, "max_requests_per_window": 30},
+    "reddit": {"navigation_interval_ms": 5000, "max_requests_per_window": 30},
+    "weibo": {"navigation_interval_ms": 5000, "max_requests_per_window": 30},
+    "instagram": {"navigation_interval_ms": 6000, "max_requests_per_window": 25},
+    "1688": {"navigation_interval_ms": 8000, "interaction_interval_ms": 800, "rate_limit_cooldown_ms": 1800000},
+    "qcc": {"navigation_interval_ms": 8000, "rate_limit_cooldown_ms": 1800000},
+    "huitun": {"navigation_interval_ms": 8000, "rate_limit_cooldown_ms": 1800000}
+  }
+}

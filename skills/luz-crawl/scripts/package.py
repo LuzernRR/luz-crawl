@@ -8,7 +8,7 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '2.4.0'
+VERSION = json.loads((ROOT / 'opencli/package.json').read_text(encoding='utf-8'))['version']
 EXCLUDED = {'node_modules', 'package-lock.json', '__pycache__', '.git', '.pytest_cache', '.venv', 'state', 'outputs', 'raw', 'browser-profile', '.capture.lock', 'events', 'legacy', 'pending'}
 DOCUMENTS = ['SKILL.md', 'README.md', 'LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md', 'CONTRIBUTING.md', 'SECURITY.md', 'CHANGELOG.md']
 
@@ -75,7 +75,7 @@ def build(out):
     native.update({f'browser-extension/{name}': data for name, data in extension.items()})
     for name in ['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md']:
         native[name] = files[name]
-    native['README.md'] = ('# LuzCrawl 2.4.0 原生采集插件\n\n'
+    native['README.md'] = (f'# LuzCrawl {VERSION} 原生采集插件\n\n'
         '完整 Skill 与使用说明：https://github.com/LuzernRR/luz-crawl\n\n'
         '需要 Node.js 24.5+ 和 @jackwener/opencli@1.8.8。将完整目录放入 ~/.opencli/plugins/luz-crawl/，'
         '在 Edge / Chrome 扩展页加载 browser-extension/，再运行 opencli daemon restart。\n\n'

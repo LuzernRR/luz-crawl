@@ -121,6 +121,13 @@ try {
   check('TikTok target payload retains description, account and observed playback URL', tik.post.text === 'TikTok目标视频简介' && tik.post.account.name === '原作者' && tik.post.videos[0].url === 'https://v16.us.tiktok.com/target.mp4' && !JSON.stringify(tik.post).includes('do-not-export'));
   check('TikTok rejects state belonging to another video', !extractPage({platform:'tiktok',requestedURL:'https://www.tiktok.com/@writer/video/456'}).target_present);
   check('An empty main does not expose script JSON as rendered body text', !extractPage({platform:'web',requestedURL:'https://example.com/empty'}).text.includes('do-not-export'));
+  document.body.innerHTML = '<main><button data-testid="tweet-text-show-more-link">Show more</button><button data-testid="tweet-text-show-more-link">Show more</button></main>';
+  let expansionClicks = 0; for (const button of document.querySelectorAll('button')) button.onclick = () => expansionClicks++;
+  const expansion = expandPage({platform:'x'});
+  check('One expansion dispatch triggers at most one page interaction', expansion.length === 1 && expansionClicks === 1);
+  document.body.innerHTML = '<main><p>公开文章的实际正文不能被图片地址规范化改写。公开文章的实际正文不能被图片地址规范化改写。</p><img src="http://example.com/original.png" alt="原图片"></main>';
+  const httpImage = extractPage({platform:'web',requestedURL:'https://example.com/article'});
+  check('Generic HTTP image URLs preserve their observed scheme', httpImage.post.images[0].url === 'http://example.com/original.png');
   document.title = 'PASS: LuzCrawl DOM fixtures';
   document.body.innerHTML = `<h1>PASS: ${results.length} DOM checks</h1><p>Synthetic local fixtures; no live platform claim.</p><pre id="results"></pre>`;
   document.querySelector('#results').textContent = JSON.stringify({ ok: true, results }, null, 2);

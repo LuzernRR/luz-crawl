@@ -9,9 +9,12 @@ import { DEFAULT_OUTPUT, atomicWrite, findExperience, verifyArchive } from '../o
 import { extractURLs, validateURL } from '../opencli/lib/platforms.mjs';
 import { preferences, rememberPreferences, rememberSite, sites, pendingTasks, loadTask } from '../opencli/lib/memory.mjs';
 import { downloadArchive } from '../opencli/lib/download.mjs';
-import { validateActions } from '../opencli/lib/browser-actions.mjs';
+import { readActions, ACTION_SCHEMA } from '../opencli/lib/browser-actions.mjs';
 import { syncBrowserPreferences } from '../opencli/lib/browser-preferences.mjs';
 import { collect, refreshCollection } from '../opencli/lib/collect.mjs';
+import { accessPolicy } from '../opencli/lib/execution.mjs';
+import { classifyFailure } from '../opencli/lib/failure.mjs';
+import { VERSION, API_VERSION } from '../opencli/lib/version.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const print = (value) => console.log(JSON.stringify(value, null, 2));
@@ -39,7 +42,7 @@ function captureArgs(url, options) {
   return args;
 }
 
-const usage = `LuzCrawl 2.4 — skill, browser extension and local memory
+const usage = `LuzCrawl ${VERSION} — skill, browser extension and local memory
   node scripts/luz-crawl.mjs doctor
   node scripts/luz-crawl.mjs install
   node scripts/luz-crawl.mjs collect "topic or URL" [--platform xhs,github,bing] [--read 1] [--out DIRECTORY]
@@ -57,14 +60,24 @@ const usage = `LuzCrawl 2.4 — skill, browser extension and local memory
   node scripts/luz-crawl.mjs verify DIRECTORY
   node scripts/luz-crawl.mjs download ARCHIVE_DIRECTORY
   node scripts/luz-crawl.mjs browser URL --file actions.json [--allow-write]
+  node scripts/luz-crawl.mjs browser URL --steps JSON [--allow-write]
+  node scripts/luz-crawl.mjs schema
+  node scripts/luz-crawl.mjs policy [--file policy.json]
 Use --profile ALIAS to select a connected LuzCrawl browser profile; --window background is optional.
 Default output: ${DEFAULT_OUTPUT}; --out overrides it. HTML and 参考链接.md are public; evidence stays in raw/.
 Browser Bridge must be connected. See references/install.md for browser installation prompts.`;
 
 async function main() {
-  const { values, positionals } = parseArgs({ allowPositionals: true, options: { out: { type: 'string' }, scrolls: { type: 'string' }, comments: { type: 'boolean' }, download: { type: 'boolean' }, 'allow-write': { type: 'boolean' }, resume: { type: 'boolean' }, file: { type: 'string' }, query: { type: 'string' }, platform: { type: 'string' }, read: { type: 'string' }, site: { type: 'string' }, profile: { type: 'string' }, window: { type: 'string' }, format: { type: 'string' }, name: { type: 'string' }, template: { type: 'string' }, keywords: { type: 'string' }, category: { type: 'string' }, help: { type: 'boolean' } } });
+  const { values, positionals } = parseArgs({ allowPositionals: true, options: { out: { type: 'string' }, scrolls: { type: 'string' }, comments: { type: 'boolean' }, download: { type: 'boolean' }, 'allow-write': { type: 'boolean' }, resume: { type: 'boolean' }, file: { type: 'string' }, steps: { type: 'string' }, query: { type: 'string' }, platform: { type: 'string' }, read: { type: 'string' }, site: { type: 'string' }, profile: { type: 'string' }, window: { type: 'string' }, format: { type: 'string' }, name: { type: 'string' }, template: { type: 'string' }, keywords: { type: 'string' }, category: { type: 'string' }, help: { type: 'boolean' } } });
   const [command, ...args] = positionals;
   if (values.help || !command) { console.log(usage); return; }
+  if (command === 'schema') { print({ version: VERSION, api_version: API_VERSION, actions: ACTION_SCHEMA }); return; }
+  if (command === 'policy') { print(await accessPolicy(values.file ? JSON.parse(await fs.readFile(path.resolve(values.file), 'utf8')) : undefined)); return; }
+  if (command === 'browser') {
+    validateURL(args[0]);
+    if (values.file === '-') { if (values.steps !== undefined) throw new Error('Use only --steps or --file.'); let input = ''; for await (const chunk of process.stdin) { input += chunk; if (input.length > 5 * 1024 * 1024) throw new Error('Action input exceeds 5 MiB.'); } values.steps = input; values.file = undefined; }
+    values.steps = JSON.stringify(await readActions(values)); values.file = undefined;
+  }
   const defaults = await preferences();
   values.profile ||= defaults.browser_profile;
   if (command === 'doctor') { const result = await doctor({ profile: values.profile }); if (values.out) await atomicWrite(path.resolve(values.out, 'raw', 'doctor.json'), result); print(result); process.exitCode = result.ready ? 0 : 2; return; }
@@ -88,13 +101,12 @@ async function main() {
     console.log(await opencli(native)); return;
   }
   if (command === 'verify') { if (!args[0]) throw new Error('Archive directory is required.'); const result = await verifyArchive(args[0]); print(result); process.exitCode = result.ok ? 0 : 2; return; }
-  if (command === 'download') { if (!args[0]) throw new Error('Archive directory is required.'); const result = await downloadArchive(args[0]); print(result); process.exitCode = result.status === 'partial' ? 2 : 0; return; }
+  if (command === 'download') { if (!args[0]) throw new Error('Archive directory is required.'); const result = await downloadArchive(args[0], { profile: values.profile }); print(result); process.exitCode = result.status === 'partial' ? 2 : 0; return; }
   if (command === 'report') { if (!args[0]) throw new Error('Collection directory is required.'); print(await refreshCollection(args[0])); return; }
   if (!['capture', 'batch', 'search', 'browser', 'collect'].includes(command)) throw new Error(`Unknown command: ${command}`);
   const current = await syncBrowserPreferences(values.profile);
   values.out ||= current.output_dir;
   values.window ||= defaults.window;
-  if (command === 'browser') { validateURL(args[0]); if (!values.file) throw new Error('--file is required.'); validateActions(JSON.parse(await fs.readFile(path.resolve(values.file), 'utf8')), values['allow-write']); }
   let batchURLs;
   if (command === 'batch') {
     if (!values.file) throw new Error('--file is required.');
@@ -118,11 +130,11 @@ async function main() {
     const result = JSON.parse(output);
     if (['blocked', 'failed'].includes(result.status)) process.exitCode = 2;
   } else if (command === 'browser') {
-    const native = ['luz-crawl', 'browser', args[0], '--file', path.resolve(values.file), '--out', path.resolve(values.out), '--window', values.window, '-f', 'json'];
+    const native = ['luz-crawl', 'browser', args[0], '--steps', values.steps, '--out', path.resolve(values.out), '--window', values.window, '-f', 'json'];
     if (values.profile) native.unshift('--profile', values.profile);
     if (values['allow-write']) native.push('--allow-write');
     const output = await opencli(native); console.log(output);
-    if (JSON.parse(output).status === 'failed') process.exitCode = 2;
+    if (JSON.parse(output).status !== 'completed') process.exitCode = 2;
   } else if (command === 'search') {
     if (!args[0] || !args[1]) throw new Error('Search requires platform and query.');
     const native = ['luz-crawl', 'search', args[0], args[1], '--out', path.resolve(values.out), '--scrolls', values.scrolls || '12', '--read', values.read || '0', '-f', 'json'];
@@ -146,4 +158,4 @@ async function main() {
   }
 }
 
-main().catch((error) => { print({ status: 'failed', error: error.message }); process.exitCode = 1; });
+main().catch((error) => { const failure = classifyFailure(error); print({ status: 'failed', error: failure.message, failure: failure.toJSON() }); process.exitCode = 1; });

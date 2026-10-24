@@ -8,8 +8,11 @@ import { doctor, resolveOpenCLI, profileFromArgs } from './lib/doctor.mjs';
 import { syncBrowserPreferences } from './lib/browser-preferences.mjs';
 import { preferences, pendingTasks, sites, loadTask } from './lib/memory.mjs';
 import { downloadArchive, downloadResult } from './lib/download.mjs';
-import { browserActions } from './lib/browser-actions.mjs';
+import { browserActions, readActions, ACTION_SCHEMA } from './lib/browser-actions.mjs';
 import { collect, refreshCollection } from './lib/collect.mjs';
+import { accessPolicy } from './lib/execution.mjs';
+import fs from 'node:fs/promises';
+import { VERSION, API_VERSION } from './lib/version.mjs';
 
 const runtime = await resolveOpenCLI();
 if (!runtime) throw new Error('The LuzCrawl host runtime could not be resolved.');
@@ -26,21 +29,25 @@ const commonArgs = [
   { name: 'screenshot', type: 'boolean', default: true, help: 'Save a browser screenshot as evidence' },
 ];
 const local = { site: 'luz-crawl', access: 'read', strategy: Strategy.LOCAL, browser: false, defaultFormat: 'json' };
-const operate = (page, options, kind) => kind === 'search' ? search(page, options) : kind === 'browser' ? browserActions(page, options) : capture(page, options);
+const operate = (page, options, kind, operations) => kind === 'search' ? search(page, options, operations) : kind === 'browser' ? browserActions(page, options, operations) : capture(page, options, operations);
 async function run(kind, options) {
+  if (kind === 'browser') { const steps = await readActions(options); options = { ...options, steps, file: undefined }; }
   if (!options.task && options.__opencliOptionSources?.out !== 'cli') {
     const saved = await syncBrowserPreferences(profileFromArgs(defaults.browser_profile));
     options = { ...options, out: saved.output_dir };
   }
   const download = options.download || options.task && (await loadTask(options.task)).options.download;
-  const result = await withBrowser(kind, options, operate);
-  if (download && result.browser?.closed) await downloadResult(result);
+  let executionPolicy;
+  const result = await withBrowser(kind, options, (page, values, taskKind, operations) => { executionPolicy = operations.policy; return operate(page, values, taskKind, operations); });
+  if (download && result.browser?.closed) { await downloadResult(result, { executionPolicy, profile: result.browser.context_id }); result.execution = executionPolicy.summary(); }
   return result;
 }
 
 cli({ ...local, name: 'doctor', description: 'Scan LuzCrawl plugin and browser connection', args: [], func: doctor });
 cli({ ...local, name: 'sites', description: 'List bundled and remembered websites', args: [], func: sites });
 cli({ ...local, name: 'pending', description: 'List browser tasks awaiting manual login or verification', args: [], func: pendingTasks });
+cli({ ...local, name: 'schema', description: 'Machine-readable browser action schema', args: [], func: () => ({ version: VERSION, api_version: API_VERSION, actions: ACTION_SCHEMA }) });
+cli({ ...local, name: 'policy', description: 'View or save bounded platform pacing and retry settings', args: [{ name: 'file', type: 'string' }], func: async options => accessPolicy(options.file ? JSON.parse(await fs.readFile(options.file, 'utf8')) : undefined) });
 cli({ ...local, name: 'collect', description: 'Plan browser searches and save all captured text and media in one HTML', args: [{name:'input',positional:true,required:true,type:'string'},{name:'platform',type:'string',help:'Comma-separated sites, or all verified sites'},{name:'file',type:'string',help:'Agent JSON search plan or links file'},{name:'read',type:'int',default:1},...commonArgs.map(arg=>['comments','download'].includes(arg.name)?{...arg,default:true}:arg)], func: async options => {if(options.__opencliOptionSources?.out!=='cli') options.out=(await syncBrowserPreferences(profileFromArgs(defaults.browser_profile))).output_dir;return collect(options.input,options);} });
 cli({ ...local, name: 'report', description: 'Refresh a saved collection after continuing its manual login tasks', args: [{name:'directory',positional:true,required:true,type:'string'}], func: options=>refreshCollection(options.directory) });
 cli({ ...local, name: 'capture', description: 'Capture through Browser Bridge; retain the owned page when login needs the user', args: [{ name: 'url', positional: true, required: true, type: 'string' }, ...commonArgs], func: (options) => run('capture', options) });
@@ -48,4 +55,4 @@ cli({ ...local, name: 'search', description: 'Always search in a real browser, l
 cli({ ...local, name: 'continue', description: 'Resume the same owned browser task after manual login', args: [{ name: 'task', positional: true, required: true, type: 'string' }], func: (options) => run('capture', options) });
 cli({ ...local, name: 'cancel', description: 'Cancel a pending task and close only its owned tab', args: [{ name: 'task', positional: true, required: true, type: 'string' }], func: (options) => cancelTask(options.task) });
 cli({ ...local, name: 'download', description: 'Download browser-verified post media from an existing archive', args: [{ name: 'directory', positional: true, required: true, type: 'string' }], func: (options) => downloadArchive(options.directory) });
-cli({ ...local, access: 'write', name: 'browser', description: 'Run bounded browser actions on an owned page; click/type need explicit authorization', args: [{ name: 'url', positional: true, required: true, type: 'string' }, { name: 'file', type: 'string', required: true }, { name: 'allow-write', type: 'boolean', default: false }, ...commonArgs], func: (options) => run('browser', options) });
+cli({ ...local, access: 'write', name: 'browser', description: 'Run bounded browser actions on an owned page; writes need explicit authorization', args: [{ name: 'url', positional: true, required: true, type: 'string' }, { name: 'file', type: 'string' }, { name: 'steps', type: 'string', help: 'JSON action array; use this or --file' }, { name: 'allow-write', type: 'boolean', default: false }, ...commonArgs], func: (options) => run('browser', options) });

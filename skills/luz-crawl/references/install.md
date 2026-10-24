@@ -59,7 +59,7 @@ node scripts/luz-crawl.mjs remember --out "E:\Research\LuzCrawl" --format html
 node scripts/luz-crawl.mjs browser "https://example.com" --file actions.json
 ```
 
-最多 20 步。click / type 需唯一可见 selector，type 还需 text；调用前取得对目标与内容的明确授权，并加 --allow-write。点击仅触发一次事件，后续 read 核验；密码手动输入，不接受任意 JavaScript / Cookie 导出 / shell。真实点赞与发送尚未验收。
+最多 20 步；也支持 --steps JSON 或 --file - 从标准输入读取。click / type / form / submit 要有明确授权并加 --allow-write；用 expect 核验，结果未知时不重放。schema 输出全部动作；policy 查看平台节流，policy --file policy.json 保存覆盖配置。[完整 API 与降级规则](browser-api.md)。密码手动输入，真实点赞与发送尚未验收。
 
 ## 排错
 
@@ -68,4 +68,4 @@ node scripts/luz-crawl.mjs browser "https://example.com" --file actions.json
 - partial：查看 limitations。404、限流、下载失败不等于未登录。
 - 删除旧扩展：扩展管理页 → 旧 OpenCLI / Browser Bridge → 移除；保留 LuzCrawl 与停放任务。
 
-浏览器桥接协议保持 1.0.24；上游标识与 Apache-2.0 法律文件保留。下载包使用 checksums.json / PACKAGE-CHECKSUMS.json 校验；`Get-FileHash -Algorithm SHA256` 核对文件。
+LuzCrawl 项目与扩展版本为 2.5.0，底层桥接协议保持 1.0.24；上游标识与 Apache-2.0 法律文件保留。下载包使用 checksums.json / PACKAGE-CHECKSUMS.json 校验；`Get-FileHash -Algorithm SHA256` 核对文件。

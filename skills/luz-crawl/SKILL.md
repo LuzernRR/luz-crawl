@@ -72,7 +72,9 @@ DIRECTORY 用采集返回的 folder。只有用户明确“记住”才更新长
 
 ## 浏览器接口与验收
 
-[浏览器接口](README.md#浏览器接口) 使用 JSON 的 read/scroll/screenshot/click/type，最多 20 步。click/type 要有唯一可见选择器并显式 --allow-write；调用前必须已有用户对具体动作、目标和内容的明确授权。真实点赞、发送等尚无已验收的平台适配器，基础测试用本地 fixture。任意 JavaScript、Cookie 和 shell 不属于该接口。
+[浏览器接口与策略](references/browser-api.md) 使用 JSON 的 read / locate / scroll / type / form / click / submit / wait_for / wait / extract / screenshot，最多 20 步；schema 输出机器可读定义。先 read / locate 取得真实控件，再使用唯一可见 selector 或 role/name。写操作要有用户对目标和内容的授权并显式 --allow-write，用 expect 核验结果；outcome_unknown 只读核验，不重新派发。真实点赞、发送尚无已验收的平台适配器。任意 JavaScript、Cookie 和 shell 不属于该接口。
+
+浏览器、正文资源与下载共用平台节流；读取只对短暂故障作有界退避，写动作一次派发，wait_for 自适应轮询。policy 可查看或保存每站等待与预算。429 / 频繁访问立即保存冷却并停止后续访问，不能换入口规避；登录和安全验证保存人工任务。冷却状态位于 opencli/memory/execution/，不进入安装包。节流降低访问频率，不能保证账号不受限制。
 
 X 长文与状态 ID 对齐、没有展开/加载控件、配图解析完、连续两次正文与资源一致时可走 article_dom_complete，不必滚到回复区；请求评论时继续加载。只从浏览器实际收到的目标响应补齐媒体，不重放私人 API。回复输入框不是长文。
 

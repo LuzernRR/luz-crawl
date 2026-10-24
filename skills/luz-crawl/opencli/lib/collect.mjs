@@ -43,14 +43,15 @@ export async function buildSearchPlan(topic, options={}) {
 
 async function runTask(task, options) {
   const kind=task.url ? 'capture' : 'search';
-  const result=await withBrowser(kind,{...options,...task},(page,values)=>kind==='search' ? search(page,values) : capture(page,values));
+  let executionPolicy;
+  const result=await withBrowser(kind,{...options,...task},(page,values,_,operations)=>{executionPolicy=operations.policy;return kind==='search' ? search(page,values,operations) : capture(page,values,operations);});
   if(result.status==='awaiting_user' && result.task_id) {
     try { await parkTask(await loadTask(result.task_id)); }
     catch(error) { result.cleanup_error=error.message;return result; }
     result.browser={...result.browser,closed:true,retained:false,parked:true};
     result.next_action=`任务已保存并关闭页面；执行 continue ${result.task_id} 后手动登录或验证。`;
   }
-  if(options.download && result.browser?.closed) await downloadResult(result);
+  if(options.download && result.browser?.closed) { await downloadResult(result, { executionPolicy, profile: result.browser.context_id }); result.execution=executionPolicy.summary(); }
   return result;
 }
 
