@@ -1,0 +1,5 @@
+LuzCrawl browser extension bundles OpenCLI Browser Bridge 1.0.24.
+Upstream: https://github.com/jackwener/opencli
+License: Apache-2.0 (see LICENSE).
+Local modifications: extension display name, popup branding, original local logo, visible labels and setup documentation.
+The upstream protocol, security checks and browser permission model are retained.

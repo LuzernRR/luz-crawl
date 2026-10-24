@@ -1,0 +1,93 @@
+# 2.3.0 基础版验证记录
+
+测试日期：2026-10-24。Windows / Edge，Node.js 24.15.0，采集运行时 1.8.8，桥接协议 1.0.24；可选 yt-dlp 2026.06.09 和 FFmpeg。当前浏览器会话的登录状态仅用于本次访问，不随仓库分发。
+
+35 项自动测试、37 项真实浏览器 DOM fixture 检查通过。本地浏览器接口的 read、DOM click、type、scroll、screenshot 共 8 步通过，点击后计数和输入后文字已读取核验，任务页已关闭。fixture 验证解析规则与本地动作，不等于平台写操作通过。
+
+## 社交内容与媒体
+
+以下为同日实际打开来源的样本；指标会变化。数量是本次加载范围，完整评论标志保持 false。下载结果按真实文件类型记录，头像和推荐内容不计入帖子媒体。
+
+| 平台 | 账号 / 当前内容 | 互动与评论 | 下载与范围 |
+| --- | --- | --- | --- |
+| xhs | 明日Tech；正文/简介 341 字 | 赞/得分164、评66、藏94；加载 15 条 | 5 个图片文件、0 个视频文件；真实搜索卡片进入，图片含页面提供的不同尺寸，未验收全量 |
+| x | OpenAI；正文/简介 0 字 | 赞/得分38840、评1978、藏4344、分享5896、浏览约11400000；加载 0 条 | 1 个图片文件、1 个视频文件；本样本是无文字视频帖，回复区未加载，partial |
+| zhihu | Jerome；正文/简介 68 字 | 赞/得分15、评4、藏9；加载 3 条 | 0 个图片文件、0 个视频文件；当前正文没有帖子媒体 |
+| douban | 嘘xixi；正文/简介 448 字 | 赞/得分5；加载 2 条 | 0 个图片文件、0 个视频文件；当前正文没有帖子媒体 |
+| reddit | u/Puzzleheaded-King584；正文/简介 25 字 | 赞/得分278、评50；加载 47 条 | 2 个图片文件、0 个视频文件；同一图片的预览与原图分别保存，收藏数未显示 |
+| douyin | 姚洋；正文/简介 88 字 | 赞/得分约10000、评535、藏4328、分享2459；加载 13 条 | 0 个图片文件、1 个视频文件；评论仅加载部分，未展开所有回复 |
+| youtube | jawed；正文/简介 381 字 | 赞/得分20106165、评10643844、浏览446158032；加载 60 条 | 1 个图片文件、0 个视频文件；封面成功，视频下载 HTTP 403，partial |
+
+X 视频经 ffprobe 验证为 12.032 秒、1920×1080、H.264/AAC；抖音视频为 396.6 秒、576×1024，含音轨。YouTube 在提供 Node JavaScript 运行时后仍返回 403，没有把封面下载算成视频成功。未导出 Cookie、未使用账号凭据或 DRM 绕过。
+
+公开样本入口：[X](https://x.com/OpenAI/status/2095527557924082061)、[知乎](https://www.zhihu.com/question/418747258/answer/1992167021987787439)、[豆瓣](https://www.douban.com/group/topic/209435714/)、[Reddit](https://www.reddit.com/r/agi/comments/1x8zlhx/wtf_is_going_on_at_openai/)、[抖音](https://www.douyin.com/video/7426666719554342184)、[YouTube](https://www.youtube.com/watch?v=jNQXAC9IVRw)。小红书使用当次真实搜索卡片，不发布临时签名入口。
+
+## 53 站搜索路线
+
+这是浏览器搜索和一个详情入口的 smoke 记录，按复测替换较早结果；不表示结果全部相关、原文完整或所有字段可得。9 个新增技术站点都曾打开可读详情；部分通过公开索引找到入口，预算耗尽仍为 partial。GitHub 仅验收仓库根和页面阅读，没有克隆全库；Stack Overflow 首次遇到验证，复测公开索引入口读到问题正文。
+
+| 网站 / ID | 搜索候选数 | 可读详情数 | 状态与边界 |
+| --- | --- | --- | --- |
+| X / Twitter / `x` | 6 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 小红书 / `xhs` | 46 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 微信公众号 / `wechat` | 9 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 抖音 / `douyin` | 2 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| YouTube / `youtube` | 8 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| Reddit / `reddit` | 11 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 知乎 / `zhihu` | 17 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 豆瓣 / `douban` | 4 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 哔哩哔哩 / `bilibili` | 37 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 微博 / `weibo` | 2 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 快手 / `kuaishou` | 0 | 0 | partial；未取得可核验候选/详情 |
+| Instagram / `instagram` | 4 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| TikTok / `tiktok` | 54 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| Google / `google` | 38 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| Bing / `bing` | 5 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 百度 / `baidu` | 130 | 0 | awaiting_user；需要用户登录/验证；任务已保存停放 |
+| 搜狗 / `sogou` | 16 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 360 搜索 / `so360` | 5 | 0 | awaiting_user；需要用户登录/验证；任务已保存停放 |
+| DuckDuckGo / `duckduckgo` | 0 | 0 | partial；未取得可核验候选/详情 |
+| 指定网站公开检索 / `web` | 5 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 中国政府采购网 / `ccgp` | 2 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 全国公共资源交易平台 / `ggzy` | 20 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 中国招标投标公共服务平台 / `cebpub` | 0 | 0 | partial；未取得可核验候选/详情 |
+| 中央政府采购网 / `zycg` | 0 | 0 | partial；未取得可核验候选/详情 |
+| 中国国际招标网 / `chinabidding` | 10 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 千里马招标网 / `qianlima` | 9 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 采招网 / `bidcenter` | 881 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 1688 / `1688` | 34 | 0 | partial；有候选；详情正文未确认 |
+| 京东企业购 / `jd-procurement` | 0 | 0 | awaiting_user；需要用户登录/验证；任务已保存停放 |
+| 中国制造网 / `made-in-china` | 4 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 企查查 / `qcc` | 6 | 0 | awaiting_user；需要用户登录/验证；任务已保存停放 |
+| 天眼查 / `tianyancha` | 0 | 0 | partial；未取得可核验候选/详情 |
+| 爱企查 / `aiqicha` | 7 | 0 | awaiting_user；需要用户登录/验证；任务已保存停放 |
+| 灰豚数据 / `huitun` | 0 | 0 | awaiting_user；介绍/登录页或公开索引；后台数据未验收 |
+| 新榜 / `newrank` | 0 | 0 | awaiting_user；介绍/登录页或公开索引；后台数据未验收 |
+| 飞瓜数据 / `feigua` | 0 | 0 | awaiting_user；介绍/登录页或公开索引；后台数据未验收 |
+| 蝉妈妈 / `chanmama` | 0 | 0 | awaiting_user；介绍/登录页或公开索引；后台数据未验收 |
+| 抖查查 / `douchacha` | 0 | 0 | awaiting_user；介绍/登录页或公开索引；后台数据未验收 |
+| 小红书创作服务平台 / `xhs-creator` | 0 | 0 | partial；介绍/登录页或公开索引；后台数据未验收 |
+| 微信公众平台后台 / `wechat-creator` | 0 | 0 | awaiting_user；介绍/登录页或公开索引；后台数据未验收 |
+| 抖音创作者中心 / `douyin-creator` | 0 | 0 | partial；介绍/登录页或公开索引；后台数据未验收 |
+| B站创作中心 / `bilibili-creator` | 0 | 0 | partial；介绍/登录页或公开索引；后台数据未验收 |
+| 百家号 / `baijiahao` | 0 | 0 | awaiting_user；介绍/登录页或公开索引；后台数据未验收 |
+| YouTube Studio / `youtube-studio` | 0 | 0 | partial；介绍/登录页或公开索引；后台数据未验收 |
+| GitHub / `github` | 10 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| Gitee / `gitee` | 20 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| CSDN / `csdn` | 36 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 博客园 / `cnblogs` | 6 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| 掘金 / `juejin` | 20 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| Stack Overflow / `stackoverflow` | 10 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| DEV Community / `devto` | 5 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+| Hacker News / `hackernews` | 1 | 1 | captured；打开了详情；完整性与字段见停止原因 |
+| V2EX / `v2ex` | 10 | 1 | partial；打开了详情；完整性与字段见停止原因 |
+
+登录待办已保存并停放；本次测试结束后没有保留测试网站页面。正常任务关闭自己创建的页面；用户原有标签未作为清理目标。SHA-256 只证明归档一致，不证明内容完整、来源授权或网站长期可用。
+
+## 验证方法与未验收项
+
+- 从 Skill 目录运行 `node --test tests/*.test.mjs`；使用本地 HTTP 服务打开 `tests/dom.html` 可复核 DOM fixture。
+- 使用带 LuzCrawl 扩展的真实浏览器执行 search/capture，保存 URL 检查、快照、字段、评论覆盖、下载清单及关闭状态。原文归档、签名媒体地址和个人状态只保留在本机，不进入公开仓库。
+- 四种 ZIP 的解压、逐文件 SHA-256、许可证、移植后的 CLI 与命令注册另行验证；CI 仅运行离线测试与打包，不能证明真实平台验收。
+- 未验收全部账号、登录/付费数据、所有页码/折叠评论、全部视频下载、字幕完整性、音频转录和 OCR。
+- 未在真实账号上执行点赞、关注、收藏、发送或发布；DOM 点击需要后续 read 核验效果，可信指针手势尚无平台适配器。
