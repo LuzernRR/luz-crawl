@@ -13,6 +13,8 @@ description: Search and capture real browser pages with the bundled LuzCrawl ext
 
 ```powershell
 node scripts/luz-crawl.mjs doctor
+ node scripts/luz-crawl.mjs begin "本次需求主题" --new
+node scripts/luz-crawl.mjs capture "https://example.com/article"
 node scripts/luz-crawl.mjs experience --query "关键词" --platform xhs
 node scripts/luz-crawl.mjs collect "主题或 URL" --read 1
 node scripts/luz-crawl.mjs search xhs "关键词" --read 1 --comments --download
@@ -20,11 +22,27 @@ node scripts/luz-crawl.mjs search xhs "关键词" --read 1 --comments --download
 
 `doctor.ready` 证明连接；`extension_install.bundled_loaded` 核对本目录 LuzCrawl 扩展。登录和正文需要实际页面验收，断连按 [安装文档](references/install.md) 排查具体缺项。
 
-每次搜索都打开真实浏览器执行新的检索。历史经验只影响路线顺序、关键词建议，不能替代本次访问。优先用户原词，结合已保存偏好和专业词扩展查询，不悄悄改换主题。默认串行调用；并行任务也必须分别收尾。
+一次用户需求只允许一个顶层 raw 任务目录。主线程开始一项新需求时仅运行一次 `begin "任务主题" --new`，保存返回的绝对 `folder`，并把该路径用于后续所有搜索、采集、批量、collect、下载、报告、校验和续接。不要按关键词、平台、来源、阶段或执行者再次创建目录。活动目录登记在 raw 根之外，其他 Agent 的默认 `begin` 会复用当前目录；只有主线程确认是另一项用户需求时才用 `--new`。子 Agent 必须收到并显式使用发起方给出的 folder，不得运行 `begin`；若没收到路径，停止采集并向发起方索取，不能靠活动目录猜测任务归属。
 
-主题优先 collect：Agent 先规划平台和关键词，可用 --file plan.json 指定各站查询；--platform all 按已验证可用路线逐站执行。链接直接读取来源。collect 默认下载可访问媒体，raw 保存来源与任务，输出一份包含已取得文字、图片、视频和评论的 HTML。手动登录续接后用 report COLLECTION_DIRECTORY 更新合集；不把未取得的内容标为完整。
+```powershell
+$taskFolder = (node scripts/luz-crawl.mjs begin "小红书与微信检索" --new | ConvertFrom-Json).folder
+node scripts/luz-crawl.mjs search xhs "关键词一" --out $taskFolder
+node scripts/luz-crawl.mjs search wechat "关键词二" --out $taskFolder
+```
 
-[可用网站](references/platforms.md) 只展示已取得目标正文的公开网站。其他内置路线或新增站点须重新验证，不能从搜索候选或后台外壳推断可用；实测边界见 [验证结果](references/validation.md)。
+若把同一需求拆给多个 Agent，只有发起方创建任务目录，并将同一个绝对 `folder` 写入每个 Agent 的任务说明。Agent 必须显式把该路径传给每条采集命令，不运行 `begin`，也不能只传共同的输出根目录。活动目录共享记录只是防止误建的最后兜底，不代替发起方传递 folder。若 Agent 没收到 folder，或无法确认已有目录，必须停止采集并向发起方索取；不得自行创建另一个 raw 子文件夹。
+
+采集、搜索、批量、collect、download、continue 和浏览器动作优先使用显式 `--profile` 或已保存的 browser_profile；保留该 Edge 配置原有登录。后台任务在现有窗口创建非激活标签，结束后只关闭任务标签。未选择配置时，Playwright 静默启动 `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`；浏览器路径、浏览器类型、资料 ID 和是否复用资料分开记录，不能仅凭 exe 路径认定网站已登录。`--headless` 用独立静默资料，不继承原登录。无头启动或页面读取未验证目标正文时，同一来源最多在已保存资料中前台重试一次；遇到登录/验证就保留页面让用户手动处理，续接后核验正文。若来源页明确显示冷却/限流，保存同一页面的原址与提示文字，在已保存浏览器中展示该来源供用户核验后停止该站访问；不再搜索、换入口或重试。只有 HTTP 限流信号而没有可展示来源页时，立即停下并如实说明。操作预算耗尽和取消也不触发重试。正常成功时不新增可见窗口。匿名正文与登录后检索分别验收，不能用 HTTP 200 或搜索外壳代替正文。
+
+默认无头 Edge 配置为 `opencli/memory/browser-profile-edge/`；只有显式设置 `LUZ_HEADLESS_BROWSER=chromium` 才使用已安装的 Playwright Chromium 和 `opencli/memory/browser-profile/`。两类配置均不迁移 Cookie、不打包，登录、续接与采集须使用同一浏览器。具体命令见[静默浏览器安装说明](references/install.md#静默-chromium)。
+
+每次搜索都打开真实浏览器执行新的检索。历史经验只影响路线顺序、关键词建议，不能替代本次访问。优先用户原词，结合已保存偏好和专业词扩展查询，不悄悄改换主题。支持任意合法 HTTP(S) 网站，不把平台目录当作白名单：适配站优先站内搜索；未知域名可直接 `capture URL`、`search example.com "关键词"` 或使用 browser 定位真实站内表单，无需事先登记。`search web "关键词" --site example.com` 是搜索引擎的域名限定查询，不是原站搜索；用户要求原站时不使用该命令替代。只有需要复用时才用 `remember --site` 保存已验证站内模板。候选、页面外壳与已核实详情分开记录。多站并发用 `batch --file jobs.json --concurrency 3 --out TASK_FOLDER`，URL 或 `{id,url,steps}` 数组均可；已登记平台按 ID 排队，其余按完整 hostname 排队，1–4 个站点同时执行。动作含输入/点击时加 `--allow-write`。登录、验证与限流只停对应站点，任务停放后由 `continue` 接续；不另开多个批次扩大同站并发。详见 [批量接口](references/browser-api.md#多站并发)。
+
+主题先按分类工作流规划平台和关键词，以 search --read 0 建候选池；Agent 检查标题和已取得正文是否回答用户问题，剔除广告、培训招生等不符合本次需求的结果后再逐条采集。已明确站点与查询时可用 collect --file plan.json；--platform all 按已验证可用路线逐站执行，不能保证每站或首条结果都相关。链接直接读取来源。collect 默认下载可访问媒体，raw 保存来源与任务，输出一份包含已取得文字、图片、视频和评论的 HTML。手动登录续接后用 report COLLECTION_DIRECTORY 更新合集；不把未取得的内容标为完整。
+
+多站调研必须先思考、建网站池再逐站实测，执行 [网站调研流程](references/site-research.md)。从 [可扩展网站库](references/site-library.json) 选取与成果相关的部分，并主动发现、补充本轮的新站；它不是白名单。任务内 `platform-plan.json` 保存候选与验证进度。招投标、企业、电商统计、创作者后台、设计与素材均优先原站搜索与详情；低信息页面先检查加载、真实控件、分类和分页，不转搜索引擎冒充站内结果。未经验证的候选不进入运行 catalog；page / search / detail / statistics / media 分别验收，并将有证据的路线和失败经验回写网站库。
+
+[平台目录](references/platforms.md)列出适配器与最近验证边界，不限制可访问域名。新域名按通用 DOM 与真实浏览器站内表单逐步扩展，搜索引擎仅在用户允许时用于发现入口；搜索候选不能证明详情正文可读，实测边界见 [验证结果](references/validation.md)。
 
 ```powershell
 node scripts/luz-crawl.mjs search github "browser automation" --read 1
@@ -32,7 +50,7 @@ node scripts/luz-crawl.mjs search csdn "Python 异步" --read 1
 node scripts/luz-crawl.mjs search ccgp "计算机" --read 1
 node scripts/luz-crawl.mjs search web "关键词" --site "example.com" --read 1
 node scripts/luz-crawl.mjs capture "https://example.com/article" --comments --download
-node scripts/luz-crawl.mjs batch --file "参考链接.md" --resume
+node scripts/luz-crawl.mjs batch --file "链接清单.md" --resume
 ```
 
 搜索结果只算候选；打开原始详情并确认目标正文后才算来源阅读。小红书优先点击真实搜索卡片，保留页面生成的入口；1688 中文检索用浏览器 GBK 表单。GitHub 仓库检索排除 stars/forks/导航，文件、Issue、PR 直接按 URL capture。
@@ -55,9 +73,13 @@ node scripts/luz-crawl.mjs cancel TASK_ID
 
 ## 保存、下载与记忆
 
-用户可在扩展弹窗保存绝对目录，或用 remember 指定目录；采集前同步最新保存的偏好，本次 --out 优先。未配置时为当前工作目录 outputs/luz-crawl。支持 HTML，命名 NNN_原标题.html。输出根目录只放编号 HTML、一个参考链接.md 和一个 raw/；原文快照、评论、截图、媒体、报告证据与安装包在 raw 内。已有来源拒绝无提示覆盖；明确 --resume 时校验后追加当前快照。目录未同步先重载 LuzCrawl 扩展。
+每次采集、搜索、浏览器动作、批量或合集结束后，自动更新本任务 `TASK_FOLDER/raw/爬取总结.html`；最后检查文件已生成，失败时保留原始结果并运行 `node scripts/luz-crawl.mjs summary TASK_FOLDER` 重建，无需重新访问网站。总结按网站分组，每页用一句话说明本次实际取得的内容，区分可见正文、搜索候选、仅观察到的媒体、失败与登录/验证状态；网站名与页面标题均为可点击超链接，不展示裸网址。使用简洁美观、适配窄屏的排版，可按需用 luz-design 优化。该总结属于 raw 中允许保留的采集记录 HTML，成品仍放在 raw 同级；不再生成或依赖 `参考链接.md`，也不自动删除其他任务的历史文件。
 
-post 保存当前目标账号、正文、图片/视频与互动；comments 保存本次加载的条目。隐藏数据为 null，缩写数保留 raw 与 approximate。不要把视频简介称为完整视频、把可见评论称为全量评论。下载在页面关闭后执行，失败另报；不导出 Cookie。字段、接口和目录见 [README](README.md) 与 [证据规范](references/evidence.md)。
+先按[分类工作流](references/workflows.md)选择 AI赚钱实操、爆款视频、获客系统、爆款文案、宣传设计或未分类搜索；分类由用户要的成果决定。每类 raw 保存源数据，成品与 raw 同级。未知新类别先询问用户是否建立目录。该文档也规定需求关键词扩展、逐条原文核验与各类交付验收。
+
+用户可在扩展弹窗保存绝对目录，或用 remember 指定目录；采集前同步最新偏好，本次 `--out` 优先。输出根目录由用户设置，例如 `<OUTPUT_ROOT>`；未配置偏好时回退到当前工作目录 `outputs/luz-crawl`。有主题方向的内容写入该方向文件夹。每项用户需求只在对应 raw 根创建一个 `NNN_任务名称` 目录；主线程运行一次 `begin "主题" --new`，后续所有阶段和 Agent 复用同一个绝对 folder。目录内的来源分档、搜索结果 JSON、快照和媒体属于该任务子目录，不算新增任务目录。线程绑定与 raw 根外的活动目录登记用于跨 Agent 防重复；新的独立需求由主线程显式 `--new`。子 Agent 若没有发起方传来的 folder 必须停止。raw 根只放任务文件夹，历史目录名可保留。成品 HTML 不复制进来源证据目录；`manifest.delivery` 保存文件名、大小和 SHA-256。已有来源拒绝无提示覆盖；显式 `--resume` 先校验再续接。目录偏好未同步时重载 LuzCrawl 扩展。用户要求精简已整理 raw 时，核验来源 URL 和交付 HTML 哈希后再生成、审查清理计划；可移除可复采的页面快照，移除文件前保留来源、交付和候选文件的哈希记录。不得把唯一设计图片当作重复快照删除。
+
+post 保存当前目标账号、正文、图片/视频与互动；comments 保存本次加载的条目。隐藏数据为 null，缩写数保留 raw 与 approximate。不要把视频简介称为完整视频、把可见评论称为全量评论。图片、字体和视频通过浏览器扩展下载，下载完成后关闭来源页；不重放平台 API、不用 HTTP 或外部视频下载器替代浏览器。仅对已经下载的音视频分轨使用本地 FFmpeg 合并。失败另报，不导出 Cookie。字段、接口和目录见 [使用说明](references/install.md#使用与下载) 与 [证据规范](references/evidence.md)。
 
 ```powershell
 node scripts/luz-crawl.mjs download DIRECTORY
@@ -68,7 +90,9 @@ node scripts/luz-crawl.mjs remember --platform "xhs,wechat" --keywords "采购,�
 node scripts/luz-crawl.mjs remember --site "https://example.com" --name example --template "https://example.com/search?q={query}"
 ```
 
-DIRECTORY 用采集返回的 folder。只有用户明确“记住”才更新长期偏好，单次 --out 不改变默认。新增网站按域名检索或 remember 登记；模板必须属于登记域名。记忆保存在 opencli/memory/，不写全局 Codex memories，不保存密码、Cookie 或浏览器资料。分发排除个人 events、pending、legacy、preferences 与归档，仅带便携默认值。
+DIRECTORY 用采集返回的 folder。只有用户明确“记住”才更新长期偏好，单次 --out 不改变默认。新域名可直接搜索；重复使用才登记已验证站内模板，模板必须属于登记域名。记忆保存在 opencli/memory/，不写全局 Codex memories，不保存密码、Cookie 或浏览器资料。分发排除个人 events、pending、legacy、preferences 与归档，仅带便携默认值。
+
+raw 根若已有任何散落文件，搜索须在访问浏览器前停止并列出文件名；保留原文件，归入编号档案并核对路径后再重试。同一用户需求的搜索、来源与失败状态共用一个任务目录；不同需求由主线程显式创建新目录。浏览器未连接、登录等待等失败也在任务目录内留存结果。分配锁与活动目录登记只短暂保存在 raw 根之外，raw 根始终只含文件夹。
 
 ## 浏览器接口与验收
 

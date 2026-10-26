@@ -1,24 +1,24 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "luz-crawl",
-  "version": "2.5.0",
-  "description": "LuzCrawl browser capture and local memory.",
+  "version": "2.7.0",
+  "description": "真实浏览器搜索、正文采集与本地证据归档。",
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "LuzCrawl",
-        "shortDescription": "Browser search, HTML capture and local search memory.",
-        "longDescription": "Self-contained browser extension, skill and search experience with verified source URLs and manual login continuation.",
+        "shortDescription": "浏览器搜索、采集与证据归档",
+        "longDescription": "一个 Skill，内含编译后的采集运行文件和浏览器扩展。",
         "developerName": "LuzernRR",
         "category": "Productivity",
         "capabilities": [
           "Read",
           "Write"
         ],
-        "defaultPrompt": "Use $luz-crawl to search in the browser, verify sources and save HTML with local experience.",
+        "defaultPrompt": "使用 $luz-crawl 检索真实网页，核验来源并保存 HTML 和原始证据。",
         "brandColor": "#8FB396",
-        "composerIcon": "./assets/icon-400.png",
-        "logo": "./assets/logo.png"
+        "composerIcon": "./skills/luz-crawl/assets/icon-400.png",
+        "logo": "./skills/luz-crawl/assets/logo.png"
       }
     }
   }
