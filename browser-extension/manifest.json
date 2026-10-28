@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "LuzCrawl",
+  "version": "2.7.0",
+  "description": "LuzCrawl 浏览器采集插件，由 LuzernRR 在 Browser Bridge 1.0.24 基础上定制：打开真实页面、搜索并保存 HTML，本地记忆保存在本 skill。",
+  "permissions": [
+    "debugger",
+    "tabs",
+    "cookies",
+    "activeTab",
+    "alarms",
+    "storage",
+    "tabGroups",
+    "downloads"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "LuzCrawl",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "short_name": "LuzCrawl",
+  "version_name": "LuzCrawl 2.7.0 (Bridge 1.0.24)",
+  "author": "LuzernRR"
+}

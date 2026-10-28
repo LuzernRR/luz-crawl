@@ -1,0 +1,5180 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-25",
+  "description": "可扩展公开网站入口库。probe 仅记录历史派发状态；completed 不代表数据已验收。verification 分别表示单次样本的页面、搜索、详情、统计和媒体验收，默认 untested。入口可失效，执行前仍须观察原站并补充新站。",
+  "verification_states": [
+    "verified",
+    "partial",
+    "blocked",
+    "failed",
+    "untested"
+  ],
+  "sites": [
+    {
+      "id": "ccgp",
+      "name": "中国政府采购网",
+      "url": "https://search.ccgp.gov.cn/",
+      "kind": "national_procurement",
+      "probe": {
+        "status": "visited",
+        "observations": 1,
+        "observed_at": "2026-10-25T10:55:06.887Z",
+        "last_action_status": "captured",
+        "last_stop_reason": "stable_after_3_scrolls",
+        "last_text_chars": 485
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "ggzy",
+      "name": "全国公共资源交易平台",
+      "url": "https://www.ggzy.gov.cn/",
+      "kind": "national交易",
+      "probe": {
+        "status": "visited",
+        "observations": 9,
+        "observed_at": "2026-10-25T11:00:22.186Z",
+        "last_action_status": "captured",
+        "last_stop_reason": "stable_after_3_scrolls",
+        "last_text_chars": 423
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      },
+      "notes": [
+        "全国公共资源详情外层 /html/a/ 可能仅含标题日期；从本次DOM读取iframe的真实src后打开正文。已实测 /html/b/ 正文包含公告及公开联系方式，不能猜URL替换路径。"
+      ]
+    },
+    {
+      "id": "gdggzy",
+      "name": "广东省公共资源交易中心",
+      "url": "https://ygp.gdzwfw.gov.cn/ggzy-portal/#/440000/index",
+      "kind": "provincial交易",
+      "probe": {
+        "status": "planned",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:05:43.713Z",
+        "last_action_status": "partial",
+        "last_stop_reason": "scroll_budget",
+        "last_text_chars": 1901
+      },
+      "verification": {
+        "page": "verified",
+        "search": "verified",
+        "detail": "verified",
+        "statistics": "untested",
+        "media": "untested"
+      },
+      "verified_at": "2026-10-25",
+      "route": {
+        "input": "input[placeholder=\"请输入关键字搜索\"]",
+        "search": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > i:nth-of-type(1)",
+        "query_sample": "门窗",
+        "observed_search_url": "https://ygp.gdzwfw.gov.cn/ggzy-portal/#/440000/search/jygg?keywords=%E9%97%A8%E7%AA%97",
+        "result_title_selector": "h3.title span[title]",
+        "detail_wait": {
+          "selector": "main",
+          "condition": "text",
+          "text": "采购项目编码",
+          "timeout_ms": 12000,
+          "stable": 2
+        },
+        "detail_sample_project_code": "4412857270840732607270605"
+      },
+      "notes": [
+        "2026-10-25 原站填写门窗并点击，省级、全部交易类型、最近1年返回10条可见公告，页面显示2页；不是全站历史总量。",
+        "搜索结果标题是含高亮子节点的 h3/span，不能仅取 a 链接；右侧热门搜索不是本次查询结果。选择器来自当次DOM，复用前重新观察。",
+        "实际点击大旺中学门窗改造事前绩效评估标题后，详情延迟加载；先等待采购项目编码等正文标志，不能仅等日期或固定1秒。",
+        "详情样本读到项目业主、中选机构、合同编号、5600.00及服务内容；它是工程造价咨询合同公开，金额不是门窗工程预算，也不是待投标门窗订单。平台汇总不作为门窗类目统计。"
+      ]
+    },
+    {
+      "id": "fszc",
+      "name": "佛山阳光采购平台",
+      "url": "https://fszc.zcjb.com.cn/cms/fszc/webfile/zdfszc=qcgc/index.html",
+      "kind": "local采购",
+      "probe": {
+        "status": "planned",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:05:27.233Z",
+        "last_action_status": "partial",
+        "last_stop_reason": "scroll_budget",
+        "last_text_chars": 869
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "chinabidding",
+      "name": "中国国际招标网",
+      "url": "https://www.chinabidding.com/",
+      "kind": "national招标",
+      "probe": {
+        "status": "visited",
+        "observations": 1,
+        "observed_at": "2026-10-25T10:55:15.371Z",
+        "last_action_status": "partial",
+        "last_stop_reason": "stable_after_3_scrolls",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "qianlima",
+      "name": "千里马招标网",
+      "url": "https://www.qianlima.com/",
+      "kind": "招标目录",
+      "probe": {
+        "status": "completed",
+        "observations": 2,
+        "observed_at": "2026-10-25T11:05:49.933Z",
+        "last_action_status": "partial",
+        "last_stop_reason": "scroll_budget",
+        "last_text_chars": 4948
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "bidcenter",
+      "name": "采招网",
+      "url": "https://www.bidcenter.com.cn/",
+      "kind": "招标目录",
+      "probe": {
+        "status": "planned",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:05:38.774Z",
+        "last_action_status": "partial",
+        "last_stop_reason": "scroll_budget",
+        "last_text_chars": 6903
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gd-bidcenter",
+      "name": "广东采招网",
+      "url": "https://gd.bidcenter.com.cn/440600/",
+      "kind": "广东招标目录",
+      "probe": {
+        "status": "planned",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:05:27.080Z",
+        "last_action_status": "partial",
+        "last_stop_reason": "scroll_budget",
+        "last_text_chars": 3479
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "1688",
+      "name": "1688",
+      "url": "https://s.1688.com/selloffer/offer_search.htm",
+      "kind": "供应商/采购",
+      "probe": {
+        "status": "visited",
+        "observations": 1,
+        "observed_at": "2026-10-25T10:50:24.521Z",
+        "last_action_status": "blocked",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 81
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "qcc",
+      "name": "企查查",
+      "url": "https://www.qcc.com/",
+      "kind": "企业名录",
+      "probe": {
+        "status": "visited",
+        "observations": 1,
+        "observed_at": "2026-10-25T10:50:02.174Z",
+        "last_action_status": "blocked",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 542
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "tianyancha",
+      "name": "天眼查",
+      "url": "https://www.tianyancha.com/",
+      "kind": "企业名录",
+      "probe": {
+        "status": "planned",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:05:50.138Z",
+        "last_action_status": "partial",
+        "last_stop_reason": "scroll_budget",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "made-in-china",
+      "name": "中国制造网",
+      "url": "https://cn.made-in-china.com/",
+      "kind": "供应商/外贸",
+      "probe": {
+        "status": "planned",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:05:40.942Z",
+        "last_action_status": "blocked",
+        "last_stop_reason": "unavailable",
+        "last_text_chars": 6616
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "yfb",
+      "name": "乙方宝",
+      "url": "https://www.yfbzb.com/",
+      "kind": "招标聚合/供应商",
+      "probe": {
+        "status": "completed",
+        "observations": 4,
+        "observed_at": "2026-10-25T12:19:32.625Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5537
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      },
+      "notes": [
+        "首页可打开不代表查询完成；搜索可能新开页，必须核验结果地址、卡片与详情。"
+      ]
+    },
+    {
+      "id": "zhaobiao",
+      "name": "中国招标网",
+      "url": "https://www.bidchance.com/",
+      "kind": "招标聚合",
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:48:02.249Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 1490
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "chinabidding2",
+      "name": "中国采购与招标网",
+      "url": "https://www.chinabidding.cn/",
+      "kind": "采购招标聚合",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:48:13.236Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3743
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jczh",
+      "name": "建设工程招标网",
+      "url": "https://www.jszhaobiao.com/",
+      "kind": "工程招标聚合",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:48:32.285Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3546
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zhaobiao360",
+      "name": "招标网",
+      "url": "https://www.bid360.com.cn/",
+      "kind": "招标聚合",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:48:40.273Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1114
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gongcheng",
+      "name": "工程建设招标信息网",
+      "url": "https://www.gczb.com/",
+      "kind": "工程招标聚合",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:48:45.993Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "caigou1688",
+      "name": "采购与供应链平台",
+      "url": "https://www.cg1688.com/",
+      "kind": "采购供应商",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:48:50.997Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "alibaba",
+      "name": "阿里巴巴国际站",
+      "url": "https://www.alibaba.com/",
+      "kind": "外贸采购",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:49:01.474Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 674
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "hc360",
+      "name": "慧聪网",
+      "url": "https://www.hc360.com/",
+      "kind": "B2B采购",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:49:07.996Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "globalsources",
+      "name": "环球资源",
+      "url": "https://www.globalsources.com/",
+      "kind": "外贸采购",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:49:13.234Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "access_denied",
+        "last_text_chars": 513
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gongyingshang",
+      "name": "中国供应商",
+      "url": "https://cn.china.cn/",
+      "kind": "B2B供应商",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:49:32.337Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 7944
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zjtcn",
+      "name": "中国建材网",
+      "url": "https://www.bmlink.com/",
+      "kind": "建材行业",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:49:50.949Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jc315",
+      "name": "建材网",
+      "url": "https://www.jc315.com/",
+      "kind": "建材行业",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:49:57.314Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2419
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "doors",
+      "name": "门窗幕墙网",
+      "url": "https://www.mc361.com/",
+      "kind": "门窗行业",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:50:02.130Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jctools",
+      "name": "中国门窗网",
+      "url": "https://www.chinamenwang.com/",
+      "kind": "门窗行业",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:50:16.401Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 10429
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gd-zfcg",
+      "name": "广东政府采购智慧云平台",
+      "url": "https://gdgpo.czt.gd.gov.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 2,
+        "observed_at": "2026-10-25T12:19:25.938Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4250
+      },
+      "verification": {
+        "page": "verified",
+        "search": "verified",
+        "detail": "partial",
+        "statistics": "untested",
+        "media": "untested"
+      },
+      "verified_at": "2026-10-25",
+      "route": {
+        "entry": "https://gdgpo.czt.gd.gov.cn/maincms-web/noticeInformationGd",
+        "input": "form > div:nth-of-type(5) input",
+        "search": {
+          "role": "button",
+          "name": "查询"
+        },
+        "query_sample": "门窗",
+        "observed_result_count": 5,
+        "homepage_close": ".noticeCloseBtn",
+        "homepage_entry": ".homeTop_r[data-v-ff2046d6] > span",
+        "detail": ".el-table__body tbody tr:first-child td:first-child .cell > span"
+      },
+      "notes": [
+        "首页实际公告可读。搜索按钮同步 window.open，新版会在原任务标签导航。",
+        "2026-10-25 填写门窗并点击后进入原站结果页，页面显示0条。仅验证此查询与入口，不代表无历史公告；地区、模块、日期及详情另验。",
+        "2026-10-25 已从首页点击采购公告 MORE 的 span 进入采购项目信息列表，实际填写标题“门窗”、核对输入值并点击“查询”，返回5条相关项目。",
+        "首页服务指引可用自身 .noticeCloseBtn 关闭；MORE 父容器不触发导航，必须点击实际 span 并核对落地地址。",
+        "全站检索0条不是无相关信息：优先复用采购项目信息列表的真实查询控件，不能用外部搜索引擎替代。",
+        "第一条阳西县书村初级中学项目详情已打开，显示2026-09-29采购计划及编号；金额、需求等正文值仍空白，详情只记partial，不作为当前可投标机会。"
+      ]
+    },
+    {
+      "id": "gdggzy-fs",
+      "name": "广东公共资源交易平台佛山专区",
+      "url": "https://ygp.gdzwfw.gov.cn/ggzy-portal/#/440600/index",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:18:50.247Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3881
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gzggzy",
+      "name": "广州公共资源交易中心",
+      "url": "https://www.gzggzy.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:50:24.194Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1912
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "szggzy",
+      "name": "深圳公共资源交易公共服务平台",
+      "url": "https://www.szggzy.com/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:50:29.211Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1982
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "dgggzy",
+      "name": "东莞公共资源交易网",
+      "url": "https://ggzy.dg.gov.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:50:34.215Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 140
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zsggzy",
+      "name": "中山市公共资源交易平台",
+      "url": "https://www.zsjypt.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:50:40.268Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1124
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zhggzy",
+      "name": "珠海公共资源交易中心",
+      "url": "https://ggzy.zhuhai.gov.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:50:48.961Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jmggzy",
+      "name": "江门公共资源交易中心",
+      "url": "https://www.jiangmen.gov.cn/bmpd/jmsggzyjyzx/",
+      "kind": "government",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:50:53.242Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "access_denied",
+        "last_text_chars": 19
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "hzggzy",
+      "name": "惠州市公共资源交易中心",
+      "url": "https://zyjy.huizhou.gov.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:51:11.242Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1992
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zqggzy",
+      "name": "肇庆市公共资源交易平台",
+      "url": "https://www.zqsggzy.com/",
+      "kind": "government",
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:51:16.255Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 150
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gpcgd",
+      "name": "广东省政府采购中心",
+      "url": "https://gpcgd.gd.gov.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:51:20.234Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 31
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cebpub",
+      "name": "中国招标投标公共服务平台",
+      "url": "https://www.cebpubservice.com/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:51:31.225Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1517
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "ctbpsp",
+      "name": "全国招标公告公示查询",
+      "url": "https://ctbpsp.com/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:51:44.215Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 945
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zycg",
+      "name": "中央政府采购网",
+      "url": "https://www.zycg.gov.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:51:53.235Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3327
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "chinabidding-gov",
+      "name": "中国招标投标网",
+      "url": "https://www.cecbid.org.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:52:02.244Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4051
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gdebid",
+      "name": "广东省招标投标监管网",
+      "url": "https://zbtb.gd.gov.cn/",
+      "kind": "government",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:52:10.258Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1414
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "ggzy-gd",
+      "name": "广东省公共资源交易中心粤采易",
+      "url": "https://www.gdebidding.com/",
+      "kind": "state_enterprise",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:52:21.274Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5889
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "sunhaoyang",
+      "name": "佛山阳光交易服务平台",
+      "url": "https://www.fsygcg.com/",
+      "kind": "local_candidate",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:52:27.961Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "ebnew",
+      "name": "必联网",
+      "url": "https://www.ebnew.com/",
+      "kind": "tender_aggregator",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:52:35.332Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4957
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zbytb",
+      "name": "招标与采购网",
+      "url": "https://www.zbytb.com/",
+      "kind": "tender_aggregator",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:52:54.968Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "target_not_found",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "86ztb",
+      "name": "中国招标投标网",
+      "url": "https://www.86ztb.com/",
+      "kind": "tender_aggregator",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:53:13.081Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jianyu",
+      "name": "剑鱼标讯",
+      "url": "https://www.jianyu360.cn/",
+      "kind": "tender_aggregator",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:53:23.340Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 7993
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zhaobiao-cn",
+      "name": "招标网",
+      "url": "https://www.zhaobiao.cn/",
+      "kind": "tender_aggregator",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:53:35.349Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 15600
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "chinabidding-portal",
+      "name": "招标采购导航候选",
+      "url": "https://www.chinabidding.cc/",
+      "kind": "tender_aggregator",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:53:45.340Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 6166
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cbi360",
+      "name": "建设通",
+      "url": "https://www.cbi360.net/",
+      "kind": "contractor_directory",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:53:59.537Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5369
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jianzhuku",
+      "name": "建管家",
+      "url": "https://www.jiangongdata.com/",
+      "kind": "contractor_directory",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:54:17.549Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5081
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "lubanlebiao",
+      "name": "鲁班乐标",
+      "url": "https://www.lubanlebiao.com/",
+      "kind": "contractor_directory",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:54:25.583Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 32
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "skyscraper",
+      "name": "筑龙学社",
+      "url": "https://www.zhulong.com/",
+      "kind": "construction_industry",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:54:34.636Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4928
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "rcc",
+      "name": "RCC瑞达恒",
+      "url": "https://www.rccchina.com/",
+      "kind": "project_intelligence",
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:54:45.002Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "icun",
+      "name": "工程信息网",
+      "url": "https://www.iccchina.com/",
+      "kind": "project_intelligence",
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:54:54.036Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cnsna",
+      "name": "千里马拟在建项目候选",
+      "url": "https://www.qianlima.com/zb/",
+      "kind": "project_intelligence",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:00.281Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2145
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cscec",
+      "name": "中国建筑云筑网",
+      "url": "https://www.yzw.cn/",
+      "kind": "contractor_procurement",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:06.337Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4132
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "crec",
+      "name": "中国中铁鲁班商务网",
+      "url": "https://www.crecgec.com/",
+      "kind": "contractor_procurement",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:14.530Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1848
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "crcc",
+      "name": "中国铁建铁建云链",
+      "url": "https://www.crccep.com/",
+      "kind": "contractor_procurement",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:24.324Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5044
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "ccccltd",
+      "name": "中交集团供应链管理信息系统",
+      "url": "https://ec.ccccltd.cn/",
+      "kind": "contractor_procurement",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:38.955Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "crbidding",
+      "name": "华润集团守正采购平台",
+      "url": "https://szecp.crc.com.cn/",
+      "kind": "state_enterprise",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:43.505Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "transient_failure",
+        "last_text_chars": 21
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cmhk",
+      "name": "招商局电子招标采购交易网",
+      "url": "https://dzzb.ciesco.com.cn/",
+      "kind": "state_enterprise",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:49.254Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2485
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "poly",
+      "name": "保利发展控股采购平台",
+      "url": "https://polycn.com/",
+      "kind": "developer",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:54.231Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1104
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "vanke",
+      "name": "万科采筑平台",
+      "url": "https://www.mycaizhu.com/",
+      "kind": "developer",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:55:58.989Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "coliin",
+      "name": "中海地产招采管理平台",
+      "url": "https://scs.coli688.com/",
+      "kind": "developer",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:56:06.954Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "csg",
+      "name": "南方电网供应链统一服务平台",
+      "url": "https://www.bidding.csg.cn/",
+      "kind": "state_enterprise",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:56:12.264Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2375
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cgnpc",
+      "name": "中广核电子商务平台",
+      "url": "https://ecp.cgnpc.com.cn/",
+      "kind": "state_enterprise",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:56:17.373Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3124
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gsxt",
+      "name": "国家企业信用信息公示系统",
+      "url": "https://www.gsxt.gov.cn/",
+      "kind": "company_registry",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:56:21.957Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "creditchina",
+      "name": "信用中国",
+      "url": "https://www.creditchina.gov.cn/",
+      "kind": "company_registry",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:56:26.362Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "aiqicha",
+      "name": "爱企查",
+      "url": "https://aiqicha.baidu.com/",
+      "kind": "company_registry",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:56:48.830Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 17
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "qixin",
+      "name": "启信宝",
+      "url": "https://www.qixin.com/",
+      "kind": "company_registry",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:57:08.310Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1111
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "tianyan-qy",
+      "name": "顺企网佛山企业名录",
+      "url": "https://foshan.11467.com/",
+      "kind": "company_directory",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:57:27.518Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3636
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "huangye88",
+      "name": "黄页88",
+      "url": "https://www.huangye88.com/",
+      "kind": "company_directory",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:57:41.400Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5838
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "qichamao",
+      "name": "企查猫",
+      "url": "https://www.qichamao.com/",
+      "kind": "company_registry",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:57:50.888Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3657
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "mohurd",
+      "name": "全国建筑市场监管公共服务平台",
+      "url": "https://jzsc.mohurd.gov.cn/",
+      "kind": "contractor_directory",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:57:56.403Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4464
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zhaopin",
+      "name": "智联招聘",
+      "url": "https://www.zhaopin.com/",
+      "kind": "hiring_signal",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:58:07.890Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3169
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "boss",
+      "name": "BOSS直聘",
+      "url": "https://www.zhipin.com/",
+      "kind": "hiring_signal",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:58:16.513Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3027
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zhaosw",
+      "name": "百度爱采购",
+      "url": "https://b2b.baidu.com/",
+      "kind": "b2b",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:58:31.426Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 17267
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "b2b168",
+      "name": "八方资源网",
+      "url": "https://www.b2b168.com/",
+      "kind": "b2b",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:58:43.783Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 14985
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gys",
+      "name": "供应商网",
+      "url": "https://www.gys.cn/",
+      "kind": "b2b",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:58:51.439Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 7887
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "sohu-focus",
+      "name": "搜狐焦点家居",
+      "url": "https://home.focus.cn/",
+      "kind": "home_improvement",
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:59:01.178Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jiagle",
+      "name": "HOMI家具家居及建材采购",
+      "url": "https://www.jiagle.com/",
+      "kind": "b2b",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:59:22.377Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 260
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jiuzheng",
+      "name": "九正建材网",
+      "url": "https://www.jc001.cn/",
+      "kind": "building_materials",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:59:28.328Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5979
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "baidu-b2b",
+      "name": "马可波罗",
+      "url": "https://china.makepolo.com/",
+      "kind": "b2b",
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:59:37.726Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 3467
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "diyitrade",
+      "name": "自助贸易",
+      "url": "https://cn.diytrade.com/",
+      "kind": "b2b",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:59:54.503Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2590
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "glass",
+      "name": "玻璃网",
+      "url": "https://www.glass.com.cn/",
+      "kind": "building_materials",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:00:06.587Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4475
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "aluminum",
+      "name": "铝道网",
+      "url": "https://www.alu.cn/",
+      "kind": "building_materials",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:00:22.471Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3351
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "alwindoor",
+      "name": "中国幕墙网",
+      "url": "https://www.alwindoor.com/",
+      "kind": "doors_windows",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:00:37.986Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "chinajc",
+      "name": "中华建材网",
+      "url": "https://www.chinajc.com/",
+      "kind": "building_materials",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:00:43.989Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "menchuang",
+      "name": "门窗网",
+      "url": "https://www.menchuang.com/",
+      "kind": "doors_windows",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:01:03.238Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 566
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "chinamumen",
+      "name": "中华木门网",
+      "url": "https://www.chinamumen.com/",
+      "kind": "doors_windows",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:01:22.953Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "windoor",
+      "name": "门窗幕墙展",
+      "url": "https://www.windoorexpo.com/",
+      "kind": "association_exhibition",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:01:42.363Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2710
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "fenestration",
+      "name": "FBC中国国际门窗幕墙博览会",
+      "url": "https://www.fenestration.com.cn/",
+      "kind": "association_exhibition",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:02:02.295Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1257
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cbda",
+      "name": "中国建筑装饰协会",
+      "url": "https://www.cbda.cn/",
+      "kind": "association_exhibition",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:02:16.848Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cbd-fair",
+      "name": "中国建博会",
+      "url": "https://www.cbd-china.com/",
+      "kind": "association_exhibition",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:02:34.978Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "tubatu",
+      "name": "土巴兔",
+      "url": "https://www.to8to.com/",
+      "kind": "decoration_directory",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:02:43.393Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1645
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "qijia",
+      "name": "齐家网",
+      "url": "https://www.jia.com/",
+      "kind": "decoration_directory",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:02:51.312Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 8461
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jiaju",
+      "name": "新浪家居",
+      "url": "https://www.jiaju.sina.com.cn/",
+      "kind": "home_improvement",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:02:55.968Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "fang",
+      "name": "房天下佛山新房",
+      "url": "https://foshan.newhouse.fang.com/",
+      "kind": "real_estate",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:03:01.991Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "anjuke",
+      "name": "安居客佛山新房",
+      "url": "https://fs.fang.anjuke.com/",
+      "kind": "real_estate",
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:03:08.128Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 27
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "fszj",
+      "name": "佛山市住房和城乡建设局",
+      "url": "https://fszj.foshan.gov.cn/",
+      "kind": "government_project",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:03:27.208Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2557
+      },
+      "verification": {
+        "page": "partial",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      },
+      "notes": [
+        "2026-10-25 后台页面仅88字页脚，操作完成仍是低信息结果，不能作为获客正文。"
+      ]
+    },
+    {
+      "id": "fsfg",
+      "name": "佛山市发展和改革局",
+      "url": "https://fsdr.foshan.gov.cn/",
+      "kind": "government_project",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:03:46.232Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1741
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "fsggzy",
+      "name": "佛山市政务服务和数据管理局交易栏目",
+      "url": "https://www.foshan.gov.cn/gzjg/fsszwfwhsjglj/",
+      "kind": "government",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:03:50.177Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "unavailable",
+        "last_text_chars": 19
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "alibaba-rfq",
+      "name": "阿里国际站RFQ采购需求",
+      "url": "https://sourcing.alibaba.com/",
+      "kind": "foreign_trade",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:03:59.696Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 7759
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "tradewheel",
+      "name": "TradeWheel",
+      "url": "https://www.tradewheel.com/",
+      "kind": "foreign_trade",
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:04:21.378Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 18000
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "tradekey",
+      "name": "TradeKey",
+      "url": "https://www.tradekey.com/",
+      "kind": "foreign_trade",
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:04:39.988Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "go4world",
+      "name": "go4WorldBusiness",
+      "url": "https://www.go4worldbusiness.com/",
+      "kind": "foreign_trade",
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T12:04:59.480Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 12330
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "huitun",
+      "name": "灰豚抖音",
+      "url": "https://dy.huitun.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:24:43.244Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2448
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "huitun-xhs",
+      "name": "灰豚小红书",
+      "url": "https://xhs.huitun.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:25:03.033Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "feigua",
+      "name": "飞瓜抖音",
+      "url": "https://dy.feigua.cn/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:25:17.485Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 899
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "feigua-xhs",
+      "name": "飞瓜小红书",
+      "url": "https://xh.feigua.cn/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:25:22.975Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "feigua-ks",
+      "name": "飞瓜快手",
+      "url": "https://ks.feigua.cn/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:25:30.414Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1681
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "chanmama",
+      "name": "蝉妈妈",
+      "url": "https://www.chanmama.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:25:46.386Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 6465
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "douchacha",
+      "name": "抖查查",
+      "url": "https://www.douchacha.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:26:03.994Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "newrank",
+      "name": "新榜",
+      "url": "https://www.newrank.cn/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:26:12.304Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4380
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "xindou",
+      "name": "新抖",
+      "url": "https://xd.newrank.cn/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:26:21.221Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 141
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "xinhong",
+      "name": "新红",
+      "url": "https://xh.newrank.cn/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:26:26.970Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "qiangua",
+      "name": "千瓜数据",
+      "url": "https://www.qian-gua.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:26:39.276Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 887
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "kalodata",
+      "name": "Kalodata",
+      "url": "https://www.kalodata.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:26:50.271Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3171
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "fastmoss",
+      "name": "FastMoss",
+      "url": "https://www.fastmoss.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:26:57.309Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1351
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "echotik",
+      "name": "EchoTik",
+      "url": "https://echotik.live/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:27:10.285Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1226
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "shoplus",
+      "name": "Shoplus",
+      "url": "https://www.shoplus.net/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:27:20.260Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1027
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "sellersprite",
+      "name": "卖家精灵",
+      "url": "https://www.sellersprite.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:27:36.436Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 6591
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "helium10",
+      "name": "Helium 10",
+      "url": "https://www.helium10.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:27:55.262Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5883
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "junglescout",
+      "name": "Jungle Scout",
+      "url": "https://www.junglescout.com/",
+      "kind": "commerce_analytics",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:28:15.021Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "target_not_found",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "pgy",
+      "name": "小红书蒲公英",
+      "url": "https://pgy.xiaohongshu.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:28:24.268Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 376
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "xhs-creator",
+      "name": "小红书创作服务平台",
+      "url": "https://creator.xiaohongshu.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:28:32.935Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 836
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "xhs-ark",
+      "name": "小红书千帆商家",
+      "url": "https://ark.xiaohongshu.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:28:40.500Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 325
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "douyin-creator",
+      "name": "抖音创作者中心",
+      "url": "https://creator.douyin.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:28:54.362Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1464
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "xingtu",
+      "name": "巨量星图",
+      "url": "https://www.xingtu.cn/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:29:03.271Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1288
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "douyin-enterprise",
+      "name": "抖音企业号",
+      "url": "https://e.douyin.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:29:13.236Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 172
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "buyin",
+      "name": "抖音精选联盟",
+      "url": "https://buyin.jinritemai.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:29:20.171Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1272
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "douyin-compass",
+      "name": "抖音电商罗盘",
+      "url": "https://compass.jinritemai.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:29:27.232Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 797
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "douyin-shop",
+      "name": "抖店",
+      "url": "https://fxg.jinritemai.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:29:46.245Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1055
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "qianchuan",
+      "name": "巨量千川",
+      "url": "https://qianchuan.jinritemai.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:29:56.188Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 84
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "douyin-school",
+      "name": "抖音电商学习中心",
+      "url": "https://school.jinritemai.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:30:07.315Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2807
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "taobao-sycm",
+      "name": "生意参谋",
+      "url": "https://sycm.taobao.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:30:16.968Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 301
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "taobao-qn",
+      "name": "千牛卖家",
+      "url": "https://qn.taobao.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:30:22.287Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 120
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "alimama",
+      "name": "淘宝联盟",
+      "url": "https://pub.alimama.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:30:27.519Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "taobao-daren",
+      "name": "淘宝创作平台",
+      "url": "https://daren.taobao.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:30:34.245Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 195
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "pdd-merchant",
+      "name": "拼多多商家",
+      "url": "https://mms.pinduoduo.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:30:40.261Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 208
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jd-sz",
+      "name": "京东商智",
+      "url": "https://sz.jd.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:30:59.245Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 835
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "jd-shop",
+      "name": "京麦商家",
+      "url": "https://shop.jd.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:31:06.230Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 170
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "kuaishou-creator",
+      "name": "快手创作者服务",
+      "url": "https://cp.kuaishou.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:31:11.973Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "kuaishou-shop",
+      "name": "快手小店",
+      "url": "https://kseller.kuaishou.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:31:16.999Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "kuaishou-star",
+      "name": "磁力聚星",
+      "url": "https://star.kuaishou.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:31:21.973Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "wechat-creator",
+      "name": "微信公众平台",
+      "url": "https://mp.weixin.qq.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:31:33.242Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 879
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "wechat-channels",
+      "name": "微信视频号助手",
+      "url": "https://channels.weixin.qq.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:31:38.221Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 202
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "bilibili-creator",
+      "name": "B站创作中心",
+      "url": "https://member.bilibili.com/platform/home",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:31:46.255Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 565
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "bilibili-huahuo",
+      "name": "B站花火",
+      "url": "https://huahuo.bilibili.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:31:52.249Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 79
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "baijiahao",
+      "name": "百家号",
+      "url": "https://baijiahao.baidu.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:32:04.037Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "login_required",
+        "last_text_chars": 6008
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "youtube-studio",
+      "name": "YouTube Studio",
+      "url": "https://studio.youtube.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:32:22.943Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "tiktok-creative",
+      "name": "TikTok Creative Center",
+      "url": "https://ads.tiktok.com/business/creativecenter/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:32:42.204Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 4096
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "tiktok-seller",
+      "name": "TikTok Shop Seller Center",
+      "url": "https://seller-us.tiktok.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:32:59.498Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 105
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "amazon-seller",
+      "name": "Amazon Seller Central",
+      "url": "https://sellercentral.amazon.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:33:18.288Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2437
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "meta-business",
+      "name": "Meta Business Suite",
+      "url": "https://business.facebook.com/",
+      "kind": "official_creator_commerce",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:33:39.363Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 380
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "google-trends",
+      "name": "Google Trends",
+      "url": "https://trends.google.com/trends/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:34:29.961Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "baidu-index",
+      "name": "百度指数",
+      "url": "https://index.baidu.com/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:34:49.213Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 67
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "similarweb",
+      "name": "Similarweb",
+      "url": "https://www.similarweb.com/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:34:54.212Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 513
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "questmobile",
+      "name": "QuestMobile",
+      "url": "https://www.questmobile.com.cn/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:35:01.268Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 968
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "iresearch",
+      "name": "艾瑞网",
+      "url": "https://www.iresearch.cn/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:35:10.236Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5058
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "iimedia",
+      "name": "艾媒网",
+      "url": "https://www.iimedia.cn/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:35:16.274Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 6043
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "100ec",
+      "name": "网经社",
+      "url": "https://www.100ec.cn/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:35:36.350Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 7861
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "aliresearch",
+      "name": "阿里研究院",
+      "url": "https://www.aliresearch.com/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:35:51.816Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "amazon-bsr",
+      "name": "Amazon Best Sellers",
+      "url": "https://www.amazon.com/Best-Sellers/zgbs",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:36:11.411Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 10450
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "smzdm",
+      "name": "什么值得买",
+      "url": "https://www.smzdm.com/",
+      "kind": "market_trends",
+      "queries": [
+        "门窗",
+        "家居",
+        "建材"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:36:30.532Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 7459
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "pinterest",
+      "name": "Pinterest",
+      "url": "https://www.pinterest.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 2,
+        "observed_at": "2026-10-25T12:11:54.884Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 22570
+      },
+      "verification": {
+        "page": "partial",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      },
+      "notes": [
+        "当前样本仅空壳或样式，未取得作品详情；CSS和隐藏脚本不算正文。"
+      ]
+    },
+    {
+      "id": "behance",
+      "name": "Behance",
+      "url": "https://www.behance.net/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:37:06.266Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 4144
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "dribbble",
+      "name": "Dribbble",
+      "url": "https://dribbble.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:37:16.972Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "target_not_found",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "artstation",
+      "name": "ArtStation",
+      "url": "https://www.artstation.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:37:35.972Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "target_not_found",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "awwwards",
+      "name": "Awwwards",
+      "url": "https://www.awwwards.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:37:42.949Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zcool",
+      "name": "站酷",
+      "url": "https://www.zcool.com.cn/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 2,
+        "observed_at": "2026-10-25T12:11:45.147Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 180
+      },
+      "verification": {
+        "page": "blocked",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      },
+      "notes": [
+        "当前样本显示访问验证；停止自动访问，人工完成后再续接。"
+      ]
+    },
+    {
+      "id": "gtn9",
+      "name": "古田路9号",
+      "url": "https://www.gtn9.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:38:14.310Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3212
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "uicn",
+      "name": "UI中国",
+      "url": "https://www.ui.cn/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:38:18.186Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 21
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "huaban",
+      "name": "花瓣",
+      "url": "https://huaban.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 2,
+        "observed_at": "2026-10-25T12:11:45.044Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2719
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "zhisheji",
+      "name": "致设计",
+      "url": "https://www.zhisheji.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:38:43.306Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 7509
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "uisdc",
+      "name": "优设",
+      "url": "https://www.uisdc.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:38:55.355Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 6452
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "uiiiuiii",
+      "name": "优优教程网",
+      "url": "https://uiiiuiii.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:39:00.237Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2300
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "figma-community",
+      "name": "Figma Community",
+      "url": "https://www.figma.com/community",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:39:05.248Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 513
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "mobbin",
+      "name": "Mobbin",
+      "url": "https://mobbin.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:39:16.374Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1949
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "pageflows",
+      "name": "Page Flows",
+      "url": "https://pageflows.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:39:35.270Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5212
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "landbook",
+      "name": "Land-book",
+      "url": "https://land-book.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:39:54.251Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2285
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "lapa",
+      "name": "Lapa Ninja",
+      "url": "https://www.lapa.ninja/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:40:13.181Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 126
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "godly",
+      "name": "Godly",
+      "url": "https://godly.website/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:40:32.181Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 724
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "refero",
+      "name": "Refero",
+      "url": "https://refero.design/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:40:51.261Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2197
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "screenlane",
+      "name": "Screenlane",
+      "url": "https://screenlane.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:41:10.269Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5212
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "uxarchive",
+      "name": "UX Archive",
+      "url": "https://uxarchive.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:41:20.209Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 743
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "collectui",
+      "name": "Collect UI",
+      "url": "https://collectui.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:41:39.313Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3961
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "canva",
+      "name": "Canva可画",
+      "url": "https://www.canva.cn/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:41:45.277Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1181
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "archdaily",
+      "name": "ArchDaily建筑日记",
+      "url": "https://www.archdaily.cn/cn",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 2,
+        "observed_at": "2026-10-25T12:19:46.074Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "condition_timeout",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "gooood",
+      "name": "谷德设计网",
+      "url": "https://www.gooood.cn/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:42:10.342Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 6725
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "archiposition",
+      "name": "有方",
+      "url": "https://www.archiposition.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:42:28.229Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2949
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "houzz",
+      "name": "Houzz家居设计",
+      "url": "https://www.houzz.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:42:47.352Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 5044
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "dezeen",
+      "name": "Dezeen",
+      "url": "https://www.dezeen.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:43:06.384Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 15312
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "designboom",
+      "name": "Designboom",
+      "url": "https://www.designboom.com/",
+      "kind": "design_inspiration",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:43:26.380Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 12960
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "ibaotu",
+      "name": "包图网",
+      "url": "https://ibaotu.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:43:39.268Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2823
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "58pic",
+      "name": "千图网",
+      "url": "https://www.58pic.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:43:50.336Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2493
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "588ku",
+      "name": "千库网",
+      "url": "https://588ku.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:44:00.349Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 6596
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "699pic",
+      "name": "摄图网",
+      "url": "https://699pic.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:44:10.503Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3926
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "vcg",
+      "name": "视觉中国",
+      "url": "https://www.vcg.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:44:16.041Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "hellorf",
+      "name": "站酷海洛",
+      "url": "https://www.hellorf.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:44:25.266Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1048
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "iconfont",
+      "name": "Iconfont",
+      "url": "https://www.iconfont.cn/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:44:31.473Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 1533
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "iconpark",
+      "name": "IconPark",
+      "url": "https://iconpark.oceanengine.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:44:43.256Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 853
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "unsplash",
+      "name": "Unsplash",
+      "url": "https://unsplash.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:44:54.348Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 15
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "pexels",
+      "name": "Pexels",
+      "url": "https://www.pexels.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:44:58.981Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "pixabay",
+      "name": "Pixabay",
+      "url": "https://pixabay.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:45:12.255Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 113
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "freepik",
+      "name": "Freepik",
+      "url": "https://www.freepik.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:45:31.307Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 8102
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "adobe-stock",
+      "name": "Adobe Stock",
+      "url": "https://stock.adobe.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "awaiting_user",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:45:49.996Z",
+        "last_action_status": "awaiting_user",
+        "last_stop_reason": "verification_required",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "sketchup-warehouse",
+      "name": "SketchUp 3D Warehouse",
+      "url": "https://3dwarehouse.sketchup.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:46:00.378Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 2126
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "bimobject",
+      "name": "BIMobject",
+      "url": "https://www.bimobject.com/",
+      "kind": "design_assets",
+      "queries": [
+        "门窗",
+        "家居",
+        "window",
+        "architecture",
+        "UI"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:46:08.982Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "cgpnews",
+      "name": "中国政府采购报",
+      "url": "http://www.cgpnews.cn/",
+      "kind": "procurement_discovered",
+      "queries": [
+        "门窗",
+        "铝合金",
+        "佛山"
+      ],
+      "probe": {
+        "status": "completed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:46:14.302Z",
+        "last_action_status": "completed",
+        "last_stop_reason": "browser_actions_complete",
+        "last_text_chars": 3429
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    },
+    {
+      "id": "caigou2003",
+      "name": "政府采购信息网",
+      "url": "http://www.caigou2003.com/",
+      "kind": "procurement_discovered",
+      "queries": [
+        "门窗",
+        "铝合金",
+        "佛山"
+      ],
+      "probe": {
+        "status": "failed",
+        "observations": 1,
+        "observed_at": "2026-10-25T11:46:20.973Z",
+        "last_action_status": "failed",
+        "last_stop_reason": "operation_failed",
+        "last_text_chars": 0
+      },
+      "verification": {
+        "page": "untested",
+        "search": "untested",
+        "detail": "untested",
+        "statistics": "untested",
+        "media": "untested"
+      }
+    }
+  ]
+}

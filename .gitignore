@@ -1,22 +1,12 @@
-*.zip
-*.7z
-*.rar
-*.tar
-*.gz
-*.map
+# 本地运行时数据：采集记忆与浏览器配置（不进入仓库）
+/opencli/memory/
+
+# 依赖与缓存
 **/node_modules/
-**/opencli/memory/
-**/tests/
-**/src/
-**/lib/
-*.py
-*.ts
-*.tsx
-*.jsx
-*.js
-*.mjs
-!skills/luz-crawl/scripts/luz-crawl.mjs
-!skills/luz-crawl/opencli/commands.js
-!skills/luz-crawl/browser-extension/dist/*.js
+__pycache__/
+*.pyc
+
+# 打包产物与临时文件
+*.zip
 *.log
 .env*

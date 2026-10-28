@@ -1,0 +1,18 @@
+{
+  "name": "opencli-plugin-luz-crawl",
+  "version": "2.7.0",
+  "private": true,
+  "type": "module",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "peerDependencies": {
+    "@jackwener/opencli": ">=1.8.8 <2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@jackwener/opencli": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=24.5.0"
+  }
+}

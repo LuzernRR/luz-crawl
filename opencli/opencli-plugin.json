@@ -1,0 +1,6 @@
+{
+  "name": "luz-crawl",
+  "version": "2.7.0",
+  "description": "Browser-first capture, search and evidence archives through Browser Bridge.",
+  "opencli": ">=1.8.8 <2.0.0"
+}

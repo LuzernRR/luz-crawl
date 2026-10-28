@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="176" viewBox="0 0 780 176" role="img" aria-labelledby="title desc">
+  <title id="title">LuzCrawl workflow</title>
+  <desc id="desc">Real browser search, visible source capture, then local HTML archives and search memory.</desc>
+  <rect width="780" height="176" rx="12" fill="#F5FAF2"/>
+  <g fill="none" stroke="#6B8972" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(113 24)">
+      <rect x="0" y="0" width="38" height="29" rx="3"/>
+      <path d="M0 8h38M6 4h.1M11 4h.1M16 4h.1"/>
+      <circle cx="17" cy="18" r="5"/>
+      <path d="m21 22 5 5"/>
+    </g>
+    <g transform="translate(371 20)">
+      <path d="M4 0h23l7 7v28H4zM27 0v7h7M10 12h17M10 18h10"/>
+      <path d="M19 22h19v11H28l-5 4v-4h-4zM24 27h9"/>
+    </g>
+    <g transform="translate(630 22)">
+      <path d="M0 5h38v9H0zM3 14v21h32V14M14 21h10"/>
+      <path d="M6 0h26M10-4h18"/>
+    </g>
+    <path d="M220 39h68m-5-5 5 5-5 5M481 39h68m-5-5 5 5-5 5" stroke="#C8DCCB"/>
+  </g>
+  <g text-anchor="middle" font-family="Inter,system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif">
+    <g fill="#354A3B" font-size="23" font-weight="600">
+      <text x="132" y="97">浏览器搜索</text>
+      <text x="390" y="97">原文采集</text>
+      <text x="649" y="97">归档与记忆</text>
+    </g>
+    <g fill="#6B8972" font-size="13">
+      <text x="132" y="124">打开真实页面</text>
+      <text x="390" y="124">账号 · 媒体 · 已加载评论</text>
+      <text x="649" y="124">HTML · 下载 · 搜索经验</text>
+    </g>
+  </g>
+</svg>
