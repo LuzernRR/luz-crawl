@@ -18,13 +18,15 @@ function pendingTask(result) {
 }
 
 export class Jobs {
-  constructor({ runtime, stateRoot, outputRoot, verificationUrl }) {
+  constructor({ runtime, stateRoot, outputRoot, verificationUrl, verificationTimeoutMs = 30 * 60_000 }) {
     this.runtime = runtime;
     this.directory = path.join(stateRoot, 'mcp-jobs');
     this.outputRoot = path.resolve(outputRoot);
     this.verificationUrl = verificationUrl;
+    this.verificationTimeoutMs = verificationTimeoutMs;
     this.active = null;
     this.waiting = null;
+    this.verificationTimer = null;
   }
 
   async init() {
@@ -39,6 +41,39 @@ export class Jobs {
         await this.save(job);
       }
     }
+  }
+
+  clearVerificationTimer() {
+    clearTimeout(this.verificationTimer);
+    this.verificationTimer = null;
+  }
+
+  async expireVerification(id) {
+    if (this.waiting !== id || this.active) return;
+    this.active = id;
+    let closeBrowser = true;
+    try {
+      const job = await this.load(id);
+      if (job.state !== 'awaiting_user') { closeBrowser = false; return; }
+      job.state = 'interrupted';
+      job.message = '人工验证等待超时；浏览器已关闭以释放资源，调用 luz_continue 可重新打开。';
+      await this.save(job);
+      this.waiting = null;
+    } catch {
+      this.waiting = null;
+    } finally {
+      this.clearVerificationTimer();
+      if (closeBrowser) {
+        try { await this.runtime.close?.(); } catch {}
+      }
+      if (this.active === id) this.active = null;
+    }
+  }
+
+  scheduleVerificationTimeout(id) {
+    this.clearVerificationTimer();
+    this.verificationTimer = setTimeout(() => { void this.expireVerification(id); }, this.verificationTimeoutMs);
+    this.verificationTimer.unref?.();
   }
 
   async load(id) {
@@ -93,7 +128,13 @@ export class Jobs {
     const previousState = job.state;
     job.state = 'queued';
     try { await this.save(job); }
-    catch (error) { this.active = null; job.state = previousState; throw error; }
+    catch (error) {
+      this.active = null;
+      job.state = previousState;
+      if (previousState === 'awaiting_user') this.scheduleVerificationTimeout(id);
+      throw error;
+    }
+    this.clearVerificationTimer();
     void this.execute(job, true);
     return this.publicJob(job);
   }
@@ -115,6 +156,7 @@ export class Jobs {
       job.message = '任务已取消，已保存的采集文件保留。';
       await this.save(job);
       if (this.waiting === id) this.waiting = null;
+      this.clearVerificationTimer();
       return this.publicJob(job);
     } finally {
       if (job.state === 'cancelled') await this.runtime.close?.();
@@ -179,7 +221,10 @@ export class Jobs {
         job.message = '结果要求人工处理，但未返回可续接的任务 ID；请检查采集结果。';
       }
       await this.save(job);
-      if (job.state === 'awaiting_user') this.waiting = job.id;
+      if (job.state === 'awaiting_user') {
+        this.waiting = job.id;
+        this.scheduleVerificationTimeout(job.id);
+      }
       else if (this.waiting === job.id) this.waiting = null;
     } catch (error) {
       job.state = 'failed';

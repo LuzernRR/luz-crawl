@@ -67,6 +67,46 @@ test('人工验证保持任务，继续后持久化结果并限制文件范围',
   assert.equal(restored.waiting, null);
 });
 
+test('无人处理的人工验证超时后释放浏览器，任务仍可续接', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'luz-mcp-verification-timeout-'));
+  const pending = '55555555-5555-4555-8555-555555555555';
+  const calls = [];
+  let closes = 0;
+  const runtime = {
+    profile: 'test',
+    async start() {},
+    async close() { closes++; },
+    async run(args) {
+      calls.push(args);
+      if (args[0] === 'begin') return { folder: path.join(root, 'out', '001') };
+      if (args[0] === 'capture') return { status: 'awaiting_user', task_id: pending };
+      if (args[0] === 'continue') return { status: 'captured' };
+      throw new Error('unexpected command');
+    }
+  };
+  const jobs = new Jobs({
+    runtime,
+    stateRoot: path.join(root, 'state'),
+    outputRoot: path.join(root, 'out'),
+    verificationUrl: 'http://localhost/verify/',
+    verificationTimeoutMs: 250
+  });
+  await jobs.init();
+  const started = await jobs.start('capture', { url: 'https://example.com/' });
+  await waitFor(async () => (await jobs.get(started.id)).state === 'awaiting_user');
+  const interrupted = await waitFor(async () => {
+    const job = await jobs.get(started.id);
+    return job.state === 'interrupted' && job;
+  });
+  assert.match(interrupted.message, /超时/);
+  assert.equal(jobs.waiting, null);
+  assert.equal(closes, 1);
+  await jobs.resume(started.id);
+  await waitFor(async () => (await jobs.get(started.id)).state === 'captured');
+  assert.deepEqual(calls.at(-1).slice(0, 2), ['continue', pending]);
+  assert.equal(closes, 2);
+});
+
 test('合集中的人工验证可续接并刷新报告', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'luz-mcp-collection-'));
   const out = path.join(root, 'out');
