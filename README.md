@@ -33,6 +33,10 @@ node scripts/luz-crawl.mjs doctor
 ffmpeg -version
 ```
 
+## MCP 服务
+
+要让远程 MCP 客户端调用并在需要时手动登录或验证，使用 Docker Compose 同时运行 LuzCrawl、Chromium、浏览器扩展与 noVNC 验证页。部署、内存限制和连接方法见 [MCP 部署说明](mcp-server/README.md)。
+
 ## 使用
 
 采集、搜索、批量、collect、download、continue 和浏览器动作优先复用所选 Edge 配置的登录信息，通过现有窗口中的非激活标签执行任务；只关闭任务标签。可用 `--profile ID` 选择连接，已保存的 browser_profile 自动生效。未选择配置时静默启动 Edge；显式 `--headless` 使用独立配置，它不继承已有登录。扩展读取真实 DOM 并下载媒体，不重放平台 API，不调用外部视频下载器。无法跳过登录或验证时显示对应任务页，用户完成后接续。详见[静默浏览器](references/install.md#静默-chromium)。

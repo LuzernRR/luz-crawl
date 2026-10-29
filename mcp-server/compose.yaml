@@ -1,0 +1,26 @@
+services:
+  luz-crawl-mcp:
+    build:
+      context: ..
+      dockerfile: mcp-server/Dockerfile
+    environment:
+      LUZ_MCP_TOKEN: "${LUZ_MCP_TOKEN:?请设置至少 32 个字符的 LUZ_MCP_TOKEN}"
+      LUZ_PUBLIC_BASE_URL: "${LUZ_PUBLIC_BASE_URL:-http://127.0.0.1:8765}"
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - luz-crawl-data:/data
+    shm_size: "256mb"
+    mem_limit: "1280m"
+    memswap_limit: "1280m"
+    cpus: 2.0
+    pids_limit: 512
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:./seccomp_profile.json
+    restart: unless-stopped
+
+volumes:
+  luz-crawl-data:

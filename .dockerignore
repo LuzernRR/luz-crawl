@@ -1,0 +1,9 @@
+.git
+**/node_modules
+opencli/memory
+outputs
+.env
+.env.*
+**/*.log
+**/__pycache__
+**/*.pyc
