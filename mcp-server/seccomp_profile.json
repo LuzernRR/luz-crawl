@@ -51,11 +51,12 @@
 	],
 	"syscalls": [
 		{
-			"comment": "Allow create user namespaces",
+			"comment": "Chromium's user namespace sandbox needs chroot even when container capabilities are dropped",
 			"names": [
 				"clone",
 				"setns",
-				"unshare"
+				"unshare",
+				"chroot"
 			],
 			"action": "SCMP_ACT_ALLOW",
 			"args": [],
