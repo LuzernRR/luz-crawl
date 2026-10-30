@@ -38,6 +38,8 @@ bearer_token_env_var = "LUZ_MCP_TOKEN"
 
 遇到登录或人工验证时，`luz_status` 会返回 `verification_url`。在本机浏览器打开该地址，在 `/verify/login` 输入同一个 MCP 令牌，然后通过 noVNC 操作**云端容器里的浏览器**，最后调用 `luz_continue` 并传入该任务 ID。本机只连接验证画面，不运行采集服务或本地浏览器插件。验证页面和采集任务使用同一份持久浏览器配置；不会导出 Cookie。
 
+登录表单和 noVNC WebSocket 都校验公开服务地址的 Origin。页面使用 `Referrer-Policy: same-origin`，避免普通表单提交的 Origin 变成 `null` 而造成连接失败。验证会话有效期为 30 分钟。
+
 等待人工处理最多保留浏览器 30 分钟；超时后任务改为 `interrupted` 并关闭浏览器释放内存。需要继续时调用 `luz_continue`，服务会重新启动浏览器并尝试续接。
 
 连接远程服务器时，可从工作电脑建立 SSH 隧道，服务器端口仍保持私有：

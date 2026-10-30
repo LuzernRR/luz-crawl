@@ -29,7 +29,9 @@ test('MCP 鉴权、工具发现和人工验证 WebSocket', async t => {
   const health = await fetch(base + '/healthz');
   assert.equal(health.status, 200);
   assert.deepEqual(await health.json(), { ready: true });
-  assert.equal((await fetch(base + '/verify/')).url, base + '/verify/login');
+  const loginPage = await fetch(base + '/verify/');
+  assert.equal(loginPage.url, base + '/verify/login');
+  assert.equal(loginPage.headers.get('referrer-policy'), 'same-origin');
   assert.equal((await fetch(base + '/mcp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401);
   assert.equal((await fetch(base + '/mcp', { method: 'POST', headers: { Authorization: 'Bearer ' + token, Origin: 'https://untrusted.example', 'Content-Type': 'application/json' }, body: '{}' })).status, 403);
   const client = new Client({ name: 'test', version: '1.0.0' });
@@ -44,12 +46,20 @@ test('MCP 鉴权、工具发现和人工验证 WebSocket', async t => {
   assert.equal(cancelled.structuredContent.state, 'cancelled');
   const invalid = await client.callTool({ name: 'luz_capture', arguments: { url: 'file:///etc/passwd' } });
   assert.equal(invalid.isError, true);
-  const login = await fetch(base + '/verify/login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token }), redirect: 'manual' });
+  for (const origin of ['null', 'https://untrusted.example']) {
+    const rejectedLogin = await fetch(base + '/verify/login', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token }), redirect: 'manual' });
+    assert.equal(rejectedLogin.status, 403);
+    assert.equal(rejectedLogin.headers.get('set-cookie'), null);
+  }
+  const loginOrigin = 'http://127.0.0.1';
+  const login = await fetch(base + '/verify/login', { method: 'POST', headers: { Origin: loginOrigin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token }), redirect: 'manual' });
   assert.equal(login.status, 303);
   const cookie = login.headers.get('set-cookie').split(';')[0];
-  const rejectedWs = new WebSocket('ws://127.0.0.1:' + server.address().port + '/verify/ws', { headers: { Cookie: cookie, Origin: 'https://untrusted.example' } });
-  await once(rejectedWs, 'error');
-  const ws = new WebSocket('ws://127.0.0.1:' + server.address().port + '/verify/ws', { headers: { Cookie: cookie, Origin: 'http://127.0.0.1' } });
+  for (const origin of ['null', 'https://untrusted.example']) {
+    const rejectedWs = new WebSocket('ws://127.0.0.1:' + server.address().port + '/verify/ws', { headers: { Cookie: cookie, Origin: origin } });
+    await once(rejectedWs, 'error');
+  }
+  const ws = new WebSocket('ws://127.0.0.1:' + server.address().port + '/verify/ws', { headers: { Cookie: cookie, Origin: loginOrigin } });
   await once(ws, 'open');
   ws.send(Buffer.from('ping'), { binary: true });
   const [data] = await once(ws, 'message');

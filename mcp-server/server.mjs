@@ -98,22 +98,23 @@ export function createHttpService({ runtime, jobs, token, publicBase, vncPort = 
   const app = express();
   app.disable('x-powered-by');
   app.use((req, res, next) => {
-    res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "frame-ancestors 'none'" });
+    // no-referrer makes HTML form POST origins null, unlike the following WebSocket.
+    res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'Content-Security-Policy': "frame-ancestors 'none'" });
     if (req.headers.origin && req.headers.origin !== publicUrl.origin) return res.status(403).json({ error: 'invalid_origin' });
     next();
   });
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false, limit: '4kb' }));
 
-  function sessionExpiry(req) {
+  function sessionFor(req) {
     const cookie = (req.headers.cookie || '').split(';').map(item => item.trim()).find(item => item.startsWith('luz_verify='));
     const id = cookie?.slice('luz_verify='.length);
-    const expires = id && sessions.get(id);
-    if (!expires || expires <= Date.now()) {
+    const session = id && sessions.get(id);
+    if (!session || session.expires <= Date.now()) {
       if (id) sessions.delete(id);
-      return 0;
+      return null;
     }
-    return expires;
+    return session;
   }
 
   app.get('/verify/login', (req, res) => {
@@ -121,7 +122,7 @@ export function createHttpService({ runtime, jobs, token, publicBase, vncPort = 
   });
   app.post('/verify/login', (req, res) => {
     const now = Date.now();
-    for (const [id, expires] of sessions) if (expires <= now) sessions.delete(id);
+    for (const [id, session] of sessions) if (session.expires <= now) sessions.delete(id);
     for (const [address, record] of failedLogins) if (record.until <= now) failedLogins.delete(address);
     const key = req.socket.remoteAddress || '';
     const prior = failedLogins.get(key);
@@ -136,13 +137,13 @@ export function createHttpService({ runtime, jobs, token, publicBase, vncPort = 
     failedLogins.delete(key);
     if (sessions.size >= sessionLimit) sessions.delete(sessions.keys().next().value);
     const session = randomBytes(32).toString('hex');
-    sessions.set(session, now + 30 * 60_000);
+    sessions.set(session, { expires: now + 30 * 60_000 });
     const secure = publicUrl.protocol === 'https:' ? '; Secure' : '';
     res.setHeader('Set-Cookie', 'luz_verify=' + session + '; Path=/verify; HttpOnly; SameSite=Strict; Max-Age=1800' + secure);
     res.redirect(303, '/verify/');
   });
   app.use('/verify', (req, res, next) => {
-    if (!sessionExpiry(req)) return res.redirect(303, '/verify/login');
+    if (!sessionFor(req)) return res.redirect(303, '/verify/login');
     res.set('Cache-Control', 'no-store');
     next();
   });
@@ -175,8 +176,8 @@ export function createHttpService({ runtime, jobs, token, publicBase, vncPort = 
   const sockets = new WebSocketServer({ noServer: true, maxPayload: 2 * 1024 * 1024 });
   let activeViewer;
   server.on('upgrade', (req, socket, head) => {
-    const expires = sessionExpiry(req);
-    if (new URL(req.url, publicBase).pathname !== '/verify/ws' || req.headers.origin !== publicUrl.origin || !expires) {
+    const session = sessionFor(req);
+    if (new URL(req.url, publicBase).pathname !== '/verify/ws' || req.headers.origin !== publicUrl.origin || !session) {
       socket.destroy();
       return;
     }
@@ -184,7 +185,7 @@ export function createHttpService({ runtime, jobs, token, publicBase, vncPort = 
       if (activeViewer) activeViewer.close(1000, 'another viewer connected');
       activeViewer = ws;
       const tcp = createConnection({ host: '127.0.0.1', port: vncPort });
-      const deadline = setTimeout(() => ws.close(1000, 'session expired'), Math.max(0, expires - Date.now()));
+      const deadline = setTimeout(() => ws.close(1000, 'session expired'), Math.max(0, session.expires - Date.now()));
       ws.on('message', (data, binary) => {
         if (!binary || tcp.writableLength > 16 * 1024 * 1024) return ws.close(1008, 'invalid input');
         tcp.write(data);
