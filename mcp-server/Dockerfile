@@ -1,4 +1,4 @@
-FROM node:24-bookworm
+FROM node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703576d55459e45efcbc9c5f5d
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app/mcp-server
 COPY mcp-server/package.json mcp-server/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund \
-    && npx playwright install --with-deps chromium \
+    && npx playwright install --with-deps --no-shell chromium \
     && npm install -g @jackwener/opencli@1.8.8 \
     && rm -rf /var/lib/apt/lists/*
 

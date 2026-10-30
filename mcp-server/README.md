@@ -15,6 +15,15 @@ docker compose up -d --build
 
 首次构建会下载 Chromium 和系统依赖，镜像较大；后续复用镜像与 `luz-crawl-data` 数据卷。数据卷包含浏览器配置、未完成任务和采集文件。用户可能在浏览器里登录网站，应保护此数据卷，不与他人共享。
 
+无法连接 Docker Hub 或不适合本机构建时，可下载 GitHub Actions 的 `MCP Docker image` 构建产物。该流程在导出前运行单测及真实 Chromium 采集、登录续接测试；产物包含镜像归档和 SHA-256，默认保留 7 天。解压产物后先核对校验和，再执行：
+
+```sh
+sha256sum -c luz-crawl-mcp-linux-amd64.tar.gz.sha256
+docker load -i luz-crawl-mcp-linux-amd64.tar.gz
+```
+
+将加载结果中的完整镜像标签写入私有 `.env` 的 `LUZ_MCP_IMAGE`，然后运行 `docker compose up -d --no-build`。镜像只包含 Linux amd64 平台；其他架构需自行构建。
+
 服务只绑定服务器的 `127.0.0.1:8765`。本机 Codex 可用以下配置连接：
 
 ```toml

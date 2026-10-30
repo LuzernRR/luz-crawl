@@ -1,0 +1,40 @@
+name: MCP Docker image
+
+on:
+  push:
+    branches: [codex/luz-crawl-mcp-v1]
+    paths: [mcp-server/**, .github/workflows/mcp-image.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build image
+        run: docker build --platform linux/amd64 -f mcp-server/Dockerfile -t luz-crawl-mcp:${{ github.sha }} .
+      - name: Test MCP and real browser
+        run: >-
+          docker run --rm --init --memory=1280m --memory-swap=1280m --shm-size=256m --cpus=2
+          --cap-drop=ALL --security-opt=no-new-privileges:true
+          --security-opt=seccomp=mcp-server/seccomp_profile.json
+          --entrypoint=sh luz-crawl-mcp:${{ github.sha }}
+          -c 'cd /app/mcp-server && npm test && node test/live-smoke.mjs'
+      - name: Export portable image
+        run: |
+          docker save luz-crawl-mcp:${{ github.sha }} | gzip > luz-crawl-mcp-linux-amd64.tar.gz
+          sha256sum luz-crawl-mcp-linux-amd64.tar.gz > luz-crawl-mcp-linux-amd64.tar.gz.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: luz-crawl-mcp-linux-amd64
+          path: |
+            luz-crawl-mcp-linux-amd64.tar.gz
+            luz-crawl-mcp-linux-amd64.tar.gz.sha256
+          compression-level: 0
+          retention-days: 7

@@ -1,5 +1,6 @@
 services:
   luz-crawl-mcp:
+    image: "${LUZ_MCP_IMAGE:-luz-crawl-mcp:local}"
     build:
       context: ..
       dockerfile: mcp-server/Dockerfile
